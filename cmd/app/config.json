@@ -1,0 +1,22 @@
+{
+"NODES":[
+    {
+        "name" : "testNode1",
+        "ConnectionType": "modbusTCP",
+        "IP": "127.0.0.1",
+        "port":502,
+        "ID":1,
+        "Log": true,
+        "ConnectionTimeout": 10,
+        "ConnectionAttempts": 5,
+        "TAGS": [
+            {
+                "name": "testTag1",
+                "address":400001,
+                "dataType": "dword",
+                "scanPeriod":5
+            }
+        ]
+    }
+]
+}

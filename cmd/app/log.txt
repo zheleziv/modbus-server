@@ -1,0 +1,52 @@
+2022-07-24 23:20:29 >> Node: name - testNode1, IP - 127.0.0.1, state - bad. Message [WARNING]: Неудалось подключиться!
+2022-07-24 23:43:13 >> Node: name - testNode1, IP - 127.0.0.1, state - bad. Message [WARNING]: Неудалось подключиться!
+2022-07-24 23:56:29 >> Node: name - testNode1, IP - 127.0.0.1, state - bad. Message [WARNING]: Неудалось подключиться!
+2022-07-24 23:56:39 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-24 23:57:34 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 15:00:54 >> Node: name - testNode1, IP - 127.0.0.1, state - bad. Message [WARNING]: Неудалось подключиться!
+2022-07-31 16:26:53 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:33:04 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Tag: name - testTag1. Message [ERROR]: dial tcp 127.0.0.1:502: i/o timeout
+2022-07-31 16:33:10 >> Node: name - testNode1, IP - 127.0.0.1, state - bad. Message [WARNING]: Неудалось подключиться!
+2022-07-31 16:33:20 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:33:58 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:34:21 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:35:26 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:37:12 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:37:51 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:39:06 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:39:17 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:40:13 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:41:14 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:41:56 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:43:04 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 16:59:03 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:00:53 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:03:54 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:05:24 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:05:57 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:07:49 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:09:03 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:11:39 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:12:14 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:14:18 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:16:59 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 17:18:56 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 23:57:05 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 23:57:55 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-07-31 23:58:04 >> Node.Tag: name - testNode1.testTag1. Message [INFO]: Запущен таймер команды run __debug_bin.exe, до завершения: 30s.
+2022-07-31 23:58:10 >> Node.Tag: name - testNode1.testTag1. Message [INFO]: Команда run __debug_bin.exe, до завершения таймера: 24s.
+2022-07-31 23:58:16 >> Node.Tag: name - testNode1.testTag1. Message [INFO]: Команда run __debug_bin.exe, до завершения таймера: 18s.
+2022-07-31 23:58:19 >> Node.Tag: name - testNode1.testTag1. Message [INFO]: Таймер команды остановлен по значению!
+2022-08-01 00:00:11 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-08-01 00:01:05 >> Node.Tag: name - testNode1.testTag1. Message [INFO]: Запущен таймер команды run __debug_bin.exe, до завершения: 30s.
+2022-08-01 00:01:11 >> Node.Tag: name - testNode1.testTag1. Message [INFO]: Команда run __debug_bin.exe, до завершения таймера: 24s.
+2022-08-01 00:01:15 >> Node.Tag: name - testNode1.testTag1. Message [INFO]: Таймер команды остановлен из-за смены конфига!
+2022-08-01 00:01:43 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-08-01 00:02:58 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-08-01 00:03:13 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-08-01 01:02:42 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-08-01 01:12:42 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-08-01 01:20:40 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Message [INFO]: Подключенно!
+2022-08-01 01:20:46 >> Node: name - testNode1, IP - 127.0.0.1, state - good. Tag: name - testTag1. Message [ERROR]: dial tcp 127.0.0.1:502: i/o timeout
+2022-08-01 01:20:52 >> Node: name - testNode1, IP - 127.0.0.1, state - bad. Message [WARNING]: Неудалось подключиться!
+2022-08-01 01:21:10 >> Node: name - testNode1, IP - 127.0.0.1, state - bad. Message [WARNING]: Неудалось подключиться!

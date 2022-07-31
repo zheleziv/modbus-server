@@ -1,0 +1,1 @@
+[{"Name":"testNode1","Ip":"127.0.0.1","SlaveId":1,"State":"bad","Tags":[{"Name":"testTag1","DataType":"dword","Address":0,"Value":0,"Timestamp":"","State":false}]}]
