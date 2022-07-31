@@ -286,7 +286,7 @@ func (c *сlientModbus) Send(id int) error {
 
 			if err != nil {
 				c.tags[id].SetState(false)
-				return err
+				return myerr.New(err.Error())
 			}
 
 			if len(resp) > 0 {
@@ -305,7 +305,7 @@ func (c *сlientModbus) Send(id int) error {
 
 			if err != nil {
 				c.tags[id].SetState(false)
-				return err
+				return myerr.New(err.Error())
 			}
 
 			if len(resp) > 0 {
@@ -324,7 +324,7 @@ func (c *сlientModbus) Send(id int) error {
 
 			if err != nil {
 				c.tags[id].SetState(false)
-				return err
+				return myerr.New(err.Error())
 			}
 
 			if len(resp) > 1 {
