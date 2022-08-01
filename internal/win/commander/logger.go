@@ -36,7 +36,7 @@ func (thisLogger *Logger) Write(level string, msg string) {
 }
 
 func save(text string) {
-	f, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	f, err := os.OpenFile("out.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		fmt.Println(err)
 	}
