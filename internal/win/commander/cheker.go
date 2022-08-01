@@ -17,16 +17,16 @@ type ConditionInterface interface {
 	checkValue(tag.TagInterface) bool
 }
 
-type DWCondition struct {
+type DWordCondition struct {
 	operator       string
 	valueCondition uint32
 }
-type WCondition struct {
+type WordCondition struct {
 	operator       string
 	valueCondition uint16
 }
 
-type CCondition struct {
+type CoilCondition struct {
 	valueCondition bool
 }
 
@@ -36,7 +36,7 @@ func NewChecker(s string, dataType string) (Checker, error) {
 	switch dataType {
 	case tag.COIL_TYPE:
 		{
-			var tmp CCondition
+			var tmp CoilCondition
 			tmp, err = newCoilCondition(s)
 			if err != nil {
 				return rtn, myerr.New(err.Error())
@@ -67,8 +67,8 @@ func NewChecker(s string, dataType string) (Checker, error) {
 	return rtn, nil
 }
 
-func newCoilCondition(s string) (CCondition, error) {
-	var rtn CCondition
+func newCoilCondition(s string) (CoilCondition, error) {
+	var rtn CoilCondition
 	if s == "true" {
 		rtn.valueCondition = true
 		return rtn, nil
@@ -79,8 +79,8 @@ func newCoilCondition(s string) (CCondition, error) {
 		return rtn, myerr.New("did not have coil value condition")
 	}
 }
-func (cc *CCondition) checkValue(t tag.TagInterface) bool {
-	return (t.(*tag.CoilTag).Value() == 1) && cc.valueCondition
+func (thisCoilCondition *CoilCondition) checkValue(t tag.TagInterface) bool {
+	return (t.(*tag.CoilTag).Value() == 1) && thisCoilCondition.valueCondition
 }
 
 func newWordCondition(s string) ([]ConditionInterface, error) {
@@ -101,32 +101,32 @@ func newWordCondition(s string) ([]ConditionInterface, error) {
 		}
 		rtn = append(
 			rtn,
-			&WCondition{
+			&WordCondition{
 				operator:       m[1],
 				valueCondition: tmpNumber})
 	}
 	return rtn, nil
 }
 
-func (wc *WCondition) checkValue(t tag.TagInterface) bool {
+func (thisWordCondition *WordCondition) checkValue(t tag.TagInterface) bool {
 	var condition bool
-	switch wc.operator {
+	switch thisWordCondition.operator {
 	case MORE:
-		condition = (t.(*tag.WordTag).Value() > wc.valueCondition)
+		condition = (t.(*tag.WordTag).Value() > thisWordCondition.valueCondition)
 	case LESS:
-		condition = (t.(*tag.WordTag).Value() < wc.valueCondition)
+		condition = (t.(*tag.WordTag).Value() < thisWordCondition.valueCondition)
 	case EQUAL:
-		condition = (t.(*tag.WordTag).Value() == wc.valueCondition)
+		condition = (t.(*tag.WordTag).Value() == thisWordCondition.valueCondition)
 	case NOT_EQUAL:
-		condition = (t.(*tag.WordTag).Value() != wc.valueCondition)
+		condition = (t.(*tag.WordTag).Value() != thisWordCondition.valueCondition)
 	case MORE_EQUAL:
-		condition = (t.(*tag.WordTag).Value() >= wc.valueCondition)
+		condition = (t.(*tag.WordTag).Value() >= thisWordCondition.valueCondition)
 	case LESS_EQUAL:
-		condition = (t.(*tag.WordTag).Value() <= wc.valueCondition)
+		condition = (t.(*tag.WordTag).Value() <= thisWordCondition.valueCondition)
 	case BIT:
-		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(wc.valueCondition)))) != 0)
+		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(thisWordCondition.valueCondition)))) != 0)
 	case NOT_BIT:
-		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(wc.valueCondition)))) == 0)
+		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(thisWordCondition.valueCondition)))) == 0)
 	default:
 		return false
 	}
@@ -151,32 +151,32 @@ func newDWordCondition(s string) ([]ConditionInterface, error) {
 		}
 		rtn = append(
 			rtn,
-			&DWCondition{
+			&DWordCondition{
 				operator:       m[1],
 				valueCondition: tmpNumber})
 	}
 	return rtn, nil
 }
 
-func (dwc *DWCondition) checkValue(t tag.TagInterface) bool {
+func (thisDWordCondition *DWordCondition) checkValue(t tag.TagInterface) bool {
 	var condition bool
-	switch dwc.operator {
+	switch thisDWordCondition.operator {
 	case MORE:
-		condition = (t.(*tag.DWordTag).Value() > dwc.valueCondition)
+		condition = (t.(*tag.DWordTag).Value() > thisDWordCondition.valueCondition)
 	case LESS:
-		condition = (t.(*tag.DWordTag).Value() < dwc.valueCondition)
+		condition = (t.(*tag.DWordTag).Value() < thisDWordCondition.valueCondition)
 	case EQUAL:
-		condition = (t.(*tag.DWordTag).Value() == dwc.valueCondition)
+		condition = (t.(*tag.DWordTag).Value() == thisDWordCondition.valueCondition)
 	case NOT_EQUAL:
-		condition = (t.(*tag.DWordTag).Value() != dwc.valueCondition)
+		condition = (t.(*tag.DWordTag).Value() != thisDWordCondition.valueCondition)
 	case MORE_EQUAL:
-		condition = (t.(*tag.DWordTag).Value() >= dwc.valueCondition)
+		condition = (t.(*tag.DWordTag).Value() >= thisDWordCondition.valueCondition)
 	case LESS_EQUAL:
-		condition = (t.(*tag.DWordTag).Value() <= dwc.valueCondition)
+		condition = (t.(*tag.DWordTag).Value() <= thisDWordCondition.valueCondition)
 	case BIT:
-		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(dwc.valueCondition)))) != 0)
+		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(thisDWordCondition.valueCondition)))) != 0)
 	case NOT_BIT:
-		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(dwc.valueCondition)))) == 0)
+		condition = ((t.(*tag.WordTag).Value() & uint16(math.Pow(2, float64(thisDWordCondition.valueCondition)))) == 0)
 	default:
 		return false
 	}

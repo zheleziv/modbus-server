@@ -20,26 +20,26 @@ type WordTag struct {
 	rw         sync.RWMutex
 }
 
-func (wt *WordTag) Setup(name string, address uint16, scanPeriod float64) error {
+func (thisWordTag *WordTag) Setup(name string, address uint16, scanPeriod float64) error {
 	var err error
-	err = wt.SetName(name)
+	err = thisWordTag.SetName(name)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	err = wt.SetAddress(address)
+	err = thisWordTag.SetAddress(address)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	wt.SetDataType()
-	err = wt.SetScanPeriod(scanPeriod)
+	thisWordTag.SetDataType()
+	err = thisWordTag.SetScanPeriod(scanPeriod)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	wt.SetState(false)
+	thisWordTag.SetState(false)
 	return nil
 }
 
-func (wt *WordTag) MarshalJSON() ([]byte, error) {
+func (thisWordTag *WordTag) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Name      string
 		DataType  string
@@ -48,86 +48,86 @@ func (wt *WordTag) MarshalJSON() ([]byte, error) {
 		Timestamp string
 		State     bool
 	}{
-		Name:      wt.name,
-		DataType:  wt.dataType,
-		Address:   wt.address,
-		Value:     wt.value,
-		Timestamp: wt.timestamp,
-		State:     wt.state,
+		Name:      thisWordTag.name,
+		DataType:  thisWordTag.dataType,
+		Address:   thisWordTag.address,
+		Value:     thisWordTag.value,
+		Timestamp: thisWordTag.timestamp,
+		State:     thisWordTag.state,
 	})
 }
 
 //===================================Name
-func (t *WordTag) SetName(name string) error {
+func (thisWordTag *WordTag) SetName(name string) error {
 	tmp := strings.TrimSpace(name)
 	if tmp == "" {
 		return myerr.New("empty tag name")
 	}
-	t.name = tmp
+	thisWordTag.name = tmp
 	return nil
 }
-func (t *WordTag) Name() string {
-	return t.name
+func (thisWordTag *WordTag) Name() string {
+	return thisWordTag.name
 }
 
 //===================================DataType
-func (t *WordTag) SetDataType() {
-	t.dataType = WORD_TYPE
+func (thisWordTag *WordTag) SetDataType() {
+	thisWordTag.dataType = WORD_TYPE
 }
-func (t *WordTag) DataType() string {
-	return t.dataType
+func (thisWordTag *WordTag) DataType() string {
+	return thisWordTag.dataType
 }
 
 //===================================Address
-func (t *WordTag) Address() uint16 {
-	return t.address
+func (thisWordTag *WordTag) Address() uint16 {
+	return thisWordTag.address
 }
-func (t *WordTag) SetAddress(address uint16) error {
+func (thisWordTag *WordTag) SetAddress(address uint16) error {
 	if address >= UINT16_MAX_VALUE {
 		return myerr.New("invalid tag address")
 
 	}
-	t.address = address
+	thisWordTag.address = address
 	return nil
 }
 
 //===================================TimeStamp
-func (t *WordTag) SetTimestamp() {
+func (thisWordTag *WordTag) SetTimestamp() {
 	now := time.Now()
-	t.timestamp = now.Format(time.RFC3339)
+	thisWordTag.timestamp = now.Format(time.RFC3339)
 }
-func (t *WordTag) Timestamp() string {
-	return t.timestamp
+func (thisWordTag *WordTag) Timestamp() string {
+	return thisWordTag.timestamp
 }
 
 //===================================State
-func (t *WordTag) SetState(state bool) {
-	t.state = state
+func (thisWordTag *WordTag) SetState(state bool) {
+	thisWordTag.state = state
 }
-func (t *WordTag) State() bool {
-	return t.state
+func (thisWordTag *WordTag) State() bool {
+	return thisWordTag.state
 }
 
 //===================================Value не интерфейсный метод
-func (t *WordTag) SetValue(value uint16) {
-	t.rw.Lock()
-	defer t.rw.Unlock()
-	t.SetTimestamp()
-	t.SetState(true)
-	t.value = value
+func (thisWordTag *WordTag) SetValue(value uint16) {
+	thisWordTag.rw.Lock()
+	defer thisWordTag.rw.Unlock()
+	thisWordTag.SetTimestamp()
+	thisWordTag.SetState(true)
+	thisWordTag.value = value
 }
-func (t *WordTag) Value() uint16 {
-	return t.value
+func (thisWordTag *WordTag) Value() uint16 {
+	return thisWordTag.value
 }
 
 //===================================ScanPeriod
-func (t *WordTag) ScanPeriod() float64 {
-	return t.scanPeriod
+func (thisWordTag *WordTag) ScanPeriod() float64 {
+	return thisWordTag.scanPeriod
 }
-func (t *WordTag) SetScanPeriod(time float64) error {
+func (thisWordTag *WordTag) SetScanPeriod(time float64) error {
 	if time < 0 {
 		return myerr.New("set scan period period < 0")
 	}
-	t.scanPeriod = time
+	thisWordTag.scanPeriod = time
 	return nil
 }

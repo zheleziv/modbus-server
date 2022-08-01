@@ -20,6 +20,6 @@ func New(e string) err {
 	}
 }
 
-func (err err) Error() string {
-	return err.msg
+func (thisErr err) Error() string {
+	return thisErr.msg
 }

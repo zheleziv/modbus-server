@@ -19,18 +19,18 @@ const (
 	ERROR   = "ERROR"
 )
 
-func (thisLog *Logger) Write(level string, msg string) {
+func (thisLogger *Logger) Write(level string, msg string) {
 
 	text := fmt.Sprintf("%s >> Node.Tag: name - %s. Message [%s]: %s\n",
 		time.Now().Format("2006-01-02 15:04:05"),
-		thisLog.ParentNodeName,
+		thisLogger.ParentNodeName,
 		level,
 		msg)
 
 	fmt.Print(text)
-	if thisLog.IsLogOutput {
-		thisLog.Lock.Lock()
-		defer thisLog.Lock.Unlock()
+	if thisLogger.IsLogOutput {
+		thisLogger.Lock.Lock()
+		defer thisLogger.Lock.Unlock()
 		save(text)
 	}
 }

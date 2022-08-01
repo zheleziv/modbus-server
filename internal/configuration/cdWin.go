@@ -22,7 +22,7 @@ type NodeTag struct {
 	ScanPeriod     float64
 }
 
-func (tn *ConfigurationDataWin) Setup(c *ConfigHandler) error {
+func (thisConfig *ConfigurationDataWin) Setup(c *ConfigHandler) error {
 	content, err := os.ReadFile(c.fileName)
 	if err != nil {
 		return myerr.New(err.Error())
@@ -34,7 +34,7 @@ func (tn *ConfigurationDataWin) Setup(c *ConfigHandler) error {
 		return myerr.New(err.Error())
 	}
 
-	// аналогично с cdApp
+	// проверка на одинаковые имена
 	for i := 0; i < len(tmpTN.NODES); i++ {
 		k := 0
 		j := i + 1
@@ -46,7 +46,7 @@ func (tn *ConfigurationDataWin) Setup(c *ConfigHandler) error {
 
 		if (j - i - 1) == k {
 			// если прошел проверку добавляем
-			tn.NODES = append(tn.NODES, tmpTN.NODES[i])
+			thisConfig.NODES = append(thisConfig.NODES, tmpTN.NODES[i])
 		}
 	}
 

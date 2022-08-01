@@ -20,26 +20,7 @@ type DWordTag struct {
 	rw         sync.RWMutex
 }
 
-func (dwt *DWordTag) Setup(name string, address uint16, scanPeriod float64) error {
-	var err error
-	err = dwt.SetName(name)
-	if err != nil {
-		return myerr.New(err.Error())
-	}
-	err = dwt.SetAddress(address)
-	if err != nil {
-		return myerr.New(err.Error())
-	}
-	dwt.SetDataType()
-	err = dwt.SetScanPeriod(scanPeriod)
-	if err != nil {
-		return myerr.New(err.Error())
-	}
-	dwt.SetState(false)
-	return nil
-}
-
-func (dwt *DWordTag) MarshalJSON() ([]byte, error) {
+func (thisDWordTag *DWordTag) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Name      string
 		DataType  string
@@ -48,85 +29,104 @@ func (dwt *DWordTag) MarshalJSON() ([]byte, error) {
 		Timestamp string
 		State     bool
 	}{
-		Name:      dwt.name,
-		DataType:  dwt.dataType,
-		Address:   dwt.address,
-		Value:     dwt.value,
-		Timestamp: dwt.timestamp,
-		State:     dwt.state,
+		Name:      thisDWordTag.name,
+		DataType:  thisDWordTag.dataType,
+		Address:   thisDWordTag.address,
+		Value:     thisDWordTag.value,
+		Timestamp: thisDWordTag.timestamp,
+		State:     thisDWordTag.state,
 	})
 }
 
+func (thisDWordTag *DWordTag) Setup(name string, address uint16, scanPeriod float64) error {
+	var err error
+	err = thisDWordTag.SetName(name)
+	if err != nil {
+		return myerr.New(err.Error())
+	}
+	err = thisDWordTag.SetAddress(address)
+	if err != nil {
+		return myerr.New(err.Error())
+	}
+	thisDWordTag.SetDataType()
+	err = thisDWordTag.SetScanPeriod(scanPeriod)
+	if err != nil {
+		return myerr.New(err.Error())
+	}
+	thisDWordTag.SetState(false)
+	return nil
+}
+
 //===================================Name
-func (dwt *DWordTag) SetName(name string) error {
+func (thisDWordTag *DWordTag) SetName(name string) error {
 	tmp := strings.TrimSpace(name)
 	if tmp == "" {
 		return myerr.New("empty tag name")
 	}
-	dwt.name = tmp
+	thisDWordTag.name = tmp
 	return nil
 }
-func (t *DWordTag) Name() string {
-	return t.name
+func (thisDWordTag *DWordTag) Name() string {
+	return thisDWordTag.name
 }
 
 //===================================DataType
-func (dwt *DWordTag) SetDataType() {
-	dwt.dataType = DWORD_TYPE
+func (thisDWordTag *DWordTag) SetDataType() {
+	thisDWordTag.dataType = DWORD_TYPE
 }
-func (dwt *DWordTag) DataType() string {
-	return dwt.dataType
+func (thisDWordTag *DWordTag) DataType() string {
+	return thisDWordTag.dataType
 }
 
 //===================================Address
-func (dwt *DWordTag) Address() uint16 {
-	return dwt.address
+func (thisDWordTag *DWordTag) Address() uint16 {
+	return thisDWordTag.address
 }
-func (dwt *DWordTag) SetAddress(address uint16) error {
+func (thisDWordTag *DWordTag) SetAddress(address uint16) error {
 	if address >= UINT16_MAX_VALUE {
 		return myerr.New("invalid tag address")
 	}
-	dwt.address = address
+	thisDWordTag.address = address
 	return nil
 }
 
 //===================================TimeStamp
-func (dwt *DWordTag) SetTimestamp() {
+func (thisDWordTag *DWordTag) SetTimestamp() {
 	now := time.Now()
-	dwt.timestamp = now.Format(time.RFC3339)
+	thisDWordTag.timestamp = now.Format(time.RFC3339)
 }
-func (dwt *DWordTag) Timestamp() string {
-	return dwt.timestamp
+func (thisDWordTag *DWordTag) Timestamp() string {
+	return thisDWordTag.timestamp
 }
 
 //===================================State
-func (dwt *DWordTag) SetState(state bool) {
-	dwt.state = state
+func (thisDWordTag *DWordTag) SetState(state bool) {
+	thisDWordTag.state = state
 }
-func (dwt *DWordTag) State() bool {
-	return dwt.state
+func (thisDWordTag *DWordTag) State() bool {
+	return thisDWordTag.state
 }
 
 //===================================Value не интерфейсный метод
-func (dwt *DWordTag) SetValue(value uint32) {
-	dwt.rw.Lock()
-	defer dwt.rw.Unlock()
-	dwt.SetTimestamp()
-	dwt.SetState(true)
-	dwt.value = value
+func (thisDWordTag *DWordTag) SetValue(value uint32) {
+	thisDWordTag.rw.Lock()
+	defer thisDWordTag.rw.Unlock()
+	thisDWordTag.SetTimestamp()
+	thisDWordTag.SetState(true)
+	thisDWordTag.value = value
 }
-func (dwt *DWordTag) Value() uint32 {
-	return dwt.value
+func (thisDWordTag *DWordTag) Value() uint32 {
+	return thisDWordTag.value
 }
 
 //===================================ScanPeriod
-func (dwt *DWordTag) ScanPeriod() float64 {
-	return dwt.scanPeriod
+func (thisDWordTag *DWordTag) ScanPeriod() float64 {
+	return thisDWordTag.scanPeriod
 }
-func (dwt *DWordTag) SetScanPeriod(time float64) error {
+func (thisDWordTag *DWordTag) SetScanPeriod(time float64) error {
 	if time < 0 {
 		return myerr.New("set scan period period < 0")
 	}
-	dwt.scanPeriod = time
+	thisDWordTag.scanPeriod = time
 	return nil
 }

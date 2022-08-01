@@ -30,7 +30,7 @@ type Tag struct {
 	ScanPeriod float64
 }
 
-func (tn *ConfigurationDataApp) Setup(c *ConfigHandler) error {
+func (thisConfig *ConfigurationDataApp) Setup(c *ConfigHandler) error {
 	content, err := os.ReadFile(c.fileName)
 	if err != nil {
 		return myerr.New(err.Error())
@@ -40,6 +40,7 @@ func (tn *ConfigurationDataApp) Setup(c *ConfigHandler) error {
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	*tn = tmpTN
+
+	*thisConfig = tmpTN
 	return nil
 }

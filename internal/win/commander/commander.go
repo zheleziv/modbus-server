@@ -98,48 +98,48 @@ func verifyScanPeriod(sp float64) (time.Duration, error) {
 	return time.Duration(sp * float64(time.Second)), nil
 }
 
-func (thisC *Commander) Setup(nt configuration.NodeTag, th *tag.TagInterface) error {
+func (thisCommander *Commander) Setup(nt configuration.NodeTag, th *tag.TagInterface) error {
 	var err error
 
-	thisC.name, err = verifyName(nt.Name) // проверка из cdApp
+	thisCommander.name, err = verifyName(nt.Name) // проверка из cdApp
 	if err != nil {
 		return myerr.New(err.Error())
 	}
 
-	thisC.cheker, err = NewChecker(nt.ValueCondition, (*th).DataType())
+	thisCommander.cheker, err = NewChecker(nt.ValueCondition, (*th).DataType())
 	if err != nil {
 		return myerr.New(err.Error())
 	}
 
-	thisC.logic, err = verifyLogic(nt.Logic)
+	thisCommander.logic, err = verifyLogic(nt.Logic)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
 
-	thisC.stateCondition, err = verifyStateCondition(nt.StateCondition)
+	thisCommander.stateCondition, err = verifyStateCondition(nt.StateCondition)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
 
-	thisC.action, err = verifyAction(nt.Action)
+	thisCommander.action, err = verifyAction(nt.Action)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
 
-	thisC.actionTimeout, err = verifyActionTimeout(nt.ActionTimeout)
+	thisCommander.actionTimeout, err = verifyActionTimeout(nt.ActionTimeout)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
 
-	thisC.scanPeriod, err = verifyScanPeriod(nt.ScanPeriod) // проверка из cdApp
+	thisCommander.scanPeriod, err = verifyScanPeriod(nt.ScanPeriod) // проверка из cdApp
 	if err != nil {
 		return myerr.New(err.Error())
 	}
 
-	thisC.th_ptr = th
+	thisCommander.th_ptr = th
 
-	thisC.log = Logger{
-		ParentNodeName: thisC.name,
+	thisCommander.log = Logger{
+		ParentNodeName: thisCommander.name,
 		IsLogOutput:    nt.Log,
 	}
 	return nil
@@ -149,14 +149,14 @@ func (thisC *Commander) Setup(nt configuration.NodeTag, th *tag.TagInterface) er
 
 // логика================================================== -- {
 
-func (dwc *Commander) StartChecking(quit chan struct{}, wg *sync.WaitGroup) {
+func (thisCommander *Commander) StartChecking(quit chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	ticker := time.NewTicker(dwc.scanPeriod)
+	ticker := time.NewTicker(thisCommander.scanPeriod)
 	var condition chan bool = make(chan bool)
 
 	wg.Add(1)
-	go dwc.startCommand(condition, quit, wg)
+	go thisCommander.startCommand(condition, quit, wg)
 	for {
 		select {
 		case <-quit:
@@ -166,18 +166,18 @@ func (dwc *Commander) StartChecking(quit chan struct{}, wg *sync.WaitGroup) {
 		case <-ticker.C:
 			{
 				ticker.Stop()
-				condition <- dwc.cheker.CheckValues(*dwc.th_ptr)
-				ticker.Reset(dwc.scanPeriod)
+				condition <- thisCommander.cheker.CheckValues(*thisCommander.th_ptr)
+				ticker.Reset(thisCommander.scanPeriod)
 			}
 		}
 	}
 }
 
-func (wc *Commander) startCommand(condition chan bool, quit chan struct{}, wg *sync.WaitGroup) {
+func (thisCommander *Commander) startCommand(condition chan bool, quit chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	timeBetweenTick := wc.actionTimeout / 5
-	tickerToCommand := time.NewTicker(wc.actionTimeout)
+	timeBetweenTick := thisCommander.actionTimeout / 5
+	tickerToCommand := time.NewTicker(thisCommander.actionTimeout)
 	tickerToCommand.Stop()
 	tickCount := 0
 
@@ -187,7 +187,7 @@ func (wc *Commander) startCommand(condition chan bool, quit chan struct{}, wg *s
 		case <-quit:
 			{
 				if lastCondition {
-					wc.log.Write(INFO, "Таймер команды остановлен из-за смены конфига!")
+					thisCommander.log.Write(INFO, "Таймер команды остановлен из-за смены конфига!")
 				}
 				return
 			}
@@ -196,15 +196,15 @@ func (wc *Commander) startCommand(condition chan bool, quit chan struct{}, wg *s
 				tickerToCommand.Stop()
 				tickCount++
 				if tickCount != 5 {
-					timeToCommand := wc.actionTimeout - time.Duration(tickCount)*timeBetweenTick
-					wc.log.Write(INFO, "Команда "+wc.action+", до завершения таймера: "+timeToCommand.String()+".")
+					timeToCommand := thisCommander.actionTimeout - time.Duration(tickCount)*timeBetweenTick
+					thisCommander.log.Write(INFO, "Команда "+thisCommander.action+", до завершения таймера: "+timeToCommand.String()+".")
 
 				} else {
 					tickCount = 0
-					wc.log.Write(INFO, "Запущена команда!")
-					err := command(wc.action)
+					thisCommander.log.Write(INFO, "Запущена команда!")
+					err := command(thisCommander.action)
 					if err != nil {
-						wc.log.Write(ERROR, err.Error())
+						thisCommander.log.Write(ERROR, err.Error())
 					}
 				}
 				tickerToCommand.Reset(timeBetweenTick)
@@ -215,10 +215,10 @@ func (wc *Commander) startCommand(condition chan bool, quit chan struct{}, wg *s
 					lastCondition = v
 					tickCount = 0
 					if v {
-						wc.log.Write(INFO, "Запущен таймер команды "+wc.action+", до завершения: "+wc.actionTimeout.String()+".")
+						thisCommander.log.Write(INFO, "Запущен таймер команды "+thisCommander.action+", до завершения: "+thisCommander.actionTimeout.String()+".")
 						tickerToCommand.Reset(timeBetweenTick)
 					} else {
-						wc.log.Write(INFO, "Таймер команды остановлен по значению!")
+						thisCommander.log.Write(INFO, "Таймер команды остановлен по значению!")
 						tickerToCommand.Stop()
 					}
 				}

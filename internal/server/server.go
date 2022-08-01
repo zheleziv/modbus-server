@@ -22,8 +22,8 @@ type Server struct {
 
 var changeCh chan int = make(chan int)
 
-func (thisSH *Server) Callback(conf *configuration.ConfigHandler) {
-	thisSH.Setup(conf)
+func (thisServer *Server) Callback(conf *configuration.ConfigHandler) {
+	thisServer.Setup(conf)
 	changeCh <- 1
 }
 
@@ -31,7 +31,7 @@ func New() *Server {
 	return &Server{}
 }
 
-func (thisSH *Server) Setup(confHandler *configuration.ConfigHandler) {
+func (thisServer *Server) Setup(confHandler *configuration.ConfigHandler) {
 	config := confHandler.GetConfig()
 	rtn := make([]client.ClientInterface, 0)
 
@@ -84,25 +84,25 @@ func (thisSH *Server) Setup(confHandler *configuration.ConfigHandler) {
 		}
 	}
 
-	thisSH.data = rtn
+	thisServer.data = rtn
 }
 
-func (thisSH *Server) GetData() []client.ClientInterface {
-	return thisSH.data
+func (thisServer *Server) GetData() []client.ClientInterface {
+	return thisServer.data
 }
 
-func (thisSH *Server) GetTagByName(name string) (tag.TagInterface, error) {
+func (thisServer *Server) GetTagByName(name string) (tag.TagInterface, error) {
 
 	split := strings.Split(name, ".")
 	if len(split) != 2 {
 		return nil, myerr.New("invalid name")
 	}
 
-	for i := range thisSH.data {
-		if thisSH.data[i].Name() == split[0] {
-			for j := range thisSH.data[i].Tags() {
-				if thisSH.data[i].Tags()[j].Name() == split[1] {
-					return thisSH.data[i].Tags()[j], nil
+	for i := range thisServer.data {
+		if thisServer.data[i].Name() == split[0] {
+			for j := range thisServer.data[i].Tags() {
+				if thisServer.data[i].Tags()[j].Name() == split[1] {
+					return thisServer.data[i].Tags()[j], nil
 				}
 			}
 		}
@@ -110,8 +110,8 @@ func (thisSH *Server) GetTagByName(name string) (tag.TagInterface, error) {
 	return nil, myerr.New("no such name")
 }
 
-func (thisSH *Server) Save() {
-	rankingsJson, err := json.Marshal(thisSH.data)
+func (thisServer *Server) Save() {
+	rankingsJson, err := json.Marshal(thisServer.data)
 	if err != nil {
 		fmt.Println(myerr.New(err.Error()))
 		return
@@ -123,7 +123,7 @@ func (thisSH *Server) Save() {
 	}
 }
 
-func (thisSH *Server) Run() {
+func (thisServer *Server) Run() {
 	quit := make(chan struct{})
 	var wg sync.WaitGroup
 
@@ -137,14 +137,14 @@ func (thisSH *Server) Run() {
 				wg.Wait()
 				quit = make(chan struct{})
 
-				for clientId := range thisSH.data {
+				for clientId := range thisServer.data {
 					wg.Add(1)
-					go thisSH.data[clientId].Start(quit, &wg)
+					go thisServer.data[clientId].Start(quit, &wg)
 				}
 			}
 		case <-saveTicker.C:
 			{
-				thisSH.Save()
+				thisServer.Save()
 			}
 		}
 	}

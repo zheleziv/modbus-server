@@ -20,38 +20,38 @@ const (
 	ERROR   = "ERROR"
 )
 
-func (thisLog *Logger) WriteWithTag(level string, nodestate string, tag string, msg string) {
+func (thisLogger *Logger) WriteWithTag(level string, nodestate string, tag string, msg string) {
 
 	text := fmt.Sprintf("%s >> Node: name - %s, IP - %s, state - %s. Tag: name - %s. Message [%s]: %s\n",
 		time.Now().Format("2006-01-02 15:04:05"),
-		thisLog.ParentNodeName,
-		thisLog.ParentNodeIp,
+		thisLogger.ParentNodeName,
+		thisLogger.ParentNodeIp,
 		nodestate,
 		tag,
 		level,
 		msg)
 
 	fmt.Print(text)
-	if thisLog.IsLogOutput {
-		thisLog.Lock.Lock()
-		defer thisLog.Lock.Unlock()
+	if thisLogger.IsLogOutput {
+		thisLogger.Lock.Lock()
+		defer thisLogger.Lock.Unlock()
 		save(text)
 	}
 }
 
-func (thisLog *Logger) Write(level string, nodestate string, msg string) {
+func (thisLogger *Logger) Write(level string, nodestate string, msg string) {
 	text := fmt.Sprintf("%s >> Node: name - %s, IP - %s, state - %s. Message [%s]: %s\n",
 		time.Now().Format("2006-01-02 15:04:05"),
-		thisLog.ParentNodeName,
-		thisLog.ParentNodeIp,
+		thisLogger.ParentNodeName,
+		thisLogger.ParentNodeIp,
 		nodestate,
 		level,
 		msg)
 
 	fmt.Print(text)
-	if thisLog.IsLogOutput {
-		thisLog.Lock.Lock()
-		defer thisLog.Lock.Unlock()
+	if thisLogger.IsLogOutput {
+		thisLogger.Lock.Lock()
+		defer thisLogger.Lock.Unlock()
 		save(text)
 	}
 }

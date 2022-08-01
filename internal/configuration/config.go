@@ -24,16 +24,16 @@ type ConfigHandler struct {
 }
 
 // обертка для выбора типа ConfigurationData и вызова Setup
-func (c *ConfigHandler) parse() (ConfigurationData, error) {
+func (thisConfigHandler *ConfigHandler) parse() (ConfigurationData, error) {
 	var tmpСonf ConfigurationData
-	if strings.Contains(c.fileName, "win_") {
+	if strings.Contains(thisConfigHandler.fileName, "win_") {
 		tmpСonf = &ConfigurationDataWin{}
-		if err := tmpСonf.(*ConfigurationDataWin).Setup(c); err != nil {
+		if err := tmpСonf.(*ConfigurationDataWin).Setup(thisConfigHandler); err != nil {
 			return nil, myerr.New(err.Error())
 		}
 	} else {
 		tmpСonf = &ConfigurationDataApp{}
-		if err := tmpСonf.(*ConfigurationDataApp).Setup(c); err != nil {
+		if err := tmpСonf.(*ConfigurationDataApp).Setup(thisConfigHandler); err != nil {
 			return nil, myerr.New(err.Error())
 		}
 	}
@@ -62,19 +62,19 @@ func NewConfig(fileName string) (conf *ConfigHandler, err error) {
 	return conf, nil
 }
 
-func (c *ConfigHandler) GetConfig() ConfigurationData {
-	c.rwLock.RLock()
-	defer c.rwLock.RUnlock()
-	return c.data
+func (thisConfigHandler *ConfigHandler) GetConfig() ConfigurationData {
+	thisConfigHandler.rwLock.RLock()
+	defer thisConfigHandler.rwLock.RUnlock()
+	return thisConfigHandler.data
 }
 
-func (c *ConfigHandler) reload() {
+func (thisConfigHandler *ConfigHandler) reload() {
 	ticker := time.NewTicker(time.Second)
 
 	for range ticker.C {
 		ticker.Stop()
 		func() {
-			f, err := os.Open(c.fileName)
+			f, err := os.Open(thisConfigHandler.fileName)
 			if err != nil {
 				fmt.Printf("reload: open file error:%s\n", myerr.New(err.Error()))
 				return
@@ -88,30 +88,29 @@ func (c *ConfigHandler) reload() {
 			}
 
 			curModifyTime := fileInfo.ModTime().Unix()
-			if curModifyTime > c.lastModifyTime {
-				m, err := c.parse()
+			if curModifyTime > thisConfigHandler.lastModifyTime {
+				m, err := thisConfigHandler.parse()
 				if err != nil {
 					fmt.Printf("parse config error:%v\n", myerr.New(err.Error()))
 					return
 				}
 
-				c.rwLock.Lock()
-				c.data = m
-				c.rwLock.Unlock()
+				thisConfigHandler.rwLock.Lock()
+				thisConfigHandler.data = m
+				thisConfigHandler.rwLock.Unlock()
 
-				c.lastModifyTime = curModifyTime
+				thisConfigHandler.lastModifyTime = curModifyTime
 
-				for _, n := range c.notifyList {
-					n.Callback(c)
+				for _, n := range thisConfigHandler.notifyList {
+					n.Callback(thisConfigHandler)
 				}
 			}
-
 		}()
 		ticker.Reset(time.Second * 5)
 	}
 }
 
 // добавить смотрителя, реализующего класс Notifyer
-func (c *ConfigHandler) AddObserver(n Notifyer) {
-	c.notifyList = append(c.notifyList, n)
+func (thisConfigHandler *ConfigHandler) AddObserver(n Notifyer) {
+	thisConfigHandler.notifyList = append(thisConfigHandler.notifyList, n)
 }

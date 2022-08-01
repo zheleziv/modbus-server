@@ -20,26 +20,26 @@ type CoilTag struct {
 	rw         sync.RWMutex
 }
 
-func (ct *CoilTag) Setup(name string, address uint16, scanPeriod float64) error {
+func (thisCoilTag *CoilTag) Setup(name string, address uint16, scanPeriod float64) error {
 	var err error
-	err = ct.SetName(name)
+	err = thisCoilTag.SetName(name)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	err = ct.SetAddress(address)
+	err = thisCoilTag.SetAddress(address)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	ct.SetDataType()
-	err = ct.SetScanPeriod(scanPeriod)
+	thisCoilTag.SetDataType()
+	err = thisCoilTag.SetScanPeriod(scanPeriod)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	ct.SetState(false)
+	thisCoilTag.SetState(false)
 	return nil
 }
 
-func (ct *CoilTag) MarshalJSON() ([]byte, error) {
+func (thisCoilTag *CoilTag) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Name      string
 		DataType  string
@@ -48,87 +48,87 @@ func (ct *CoilTag) MarshalJSON() ([]byte, error) {
 		Timestamp string
 		State     bool
 	}{
-		Name:      ct.name,
-		DataType:  ct.dataType,
-		Address:   ct.address,
-		Value:     ct.value,
-		Timestamp: ct.timestamp,
-		State:     ct.state,
+		Name:      thisCoilTag.name,
+		DataType:  thisCoilTag.dataType,
+		Address:   thisCoilTag.address,
+		Value:     thisCoilTag.value,
+		Timestamp: thisCoilTag.timestamp,
+		State:     thisCoilTag.state,
 	})
 }
 
 //===================================Name
-func (t *CoilTag) SetName(name string) error {
+func (thisCoilTag *CoilTag) SetName(name string) error {
 	tmp := strings.TrimSpace(name)
 	if tmp == "" {
 		return myerr.New("empty tag name")
 	}
-	t.name = tmp
+	thisCoilTag.name = tmp
 	return nil
 }
-func (t *CoilTag) Name() string {
-	return t.name
+func (thisCoilTag *CoilTag) Name() string {
+	return thisCoilTag.name
 }
 
 //===================================DataType
-func (t *CoilTag) SetDataType() {
-	t.dataType = COIL_TYPE
+func (thisCoilTag *CoilTag) SetDataType() {
+	thisCoilTag.dataType = COIL_TYPE
 }
-func (t *CoilTag) DataType() string {
-	return t.dataType
+func (thisCoilTag *CoilTag) DataType() string {
+	return thisCoilTag.dataType
 }
 
 //===================================Address
-func (t *CoilTag) SetAddress(address uint16) error {
+func (thisCoilTag *CoilTag) SetAddress(address uint16) error {
 	if address >= UINT16_MAX_VALUE {
 		return myerr.New("invalid tag address")
 	}
-	t.address = address
+	thisCoilTag.address = address
 	return nil
 }
-func (t *CoilTag) Address() uint16 {
-	return t.address
+func (thisCoilTag *CoilTag) Address() uint16 {
+	return thisCoilTag.address
 }
 
 //===================================ScanPeriod
-func (t *CoilTag) SetScanPeriod(time float64) error {
+func (thisCoilTag *CoilTag) SetScanPeriod(time float64) error {
 	if time < 0 {
 		return myerr.New("set scan period < 0")
 	}
-	t.scanPeriod = time
+	thisCoilTag.scanPeriod = time
 	return nil
 }
-func (t *CoilTag) ScanPeriod() float64 {
-	t.rw.Lock()
-	defer t.rw.Unlock()
-	return t.scanPeriod
+func (thisCoilTag *CoilTag) ScanPeriod() float64 {
+	thisCoilTag.rw.Lock()
+	defer thisCoilTag.rw.Unlock()
+	return thisCoilTag.scanPeriod
 }
 
 //===================================Value
-func (t *CoilTag) SetValue(value byte) {
-	t.rw.Lock()
-	defer t.rw.Unlock()
-	t.SetTimestamp()
-	t.SetState(true)
-	t.value = value
+func (thisCoilTag *CoilTag) SetValue(value byte) {
+	thisCoilTag.rw.Lock()
+	defer thisCoilTag.rw.Unlock()
+	thisCoilTag.SetTimestamp()
+	thisCoilTag.SetState(true)
+	thisCoilTag.value = value
 }
-func (t *CoilTag) Value() byte {
-	return t.value
+func (thisCoilTag *CoilTag) Value() byte {
+	return thisCoilTag.value
 }
 
 //===================================TimeStamp
-func (t *CoilTag) SetTimestamp() {
+func (thisCoilTag *CoilTag) SetTimestamp() {
 	now := time.Now()
-	t.timestamp = now.Format(time.RFC3339)
+	thisCoilTag.timestamp = now.Format(time.RFC3339)
 }
-func (t *CoilTag) Timestamp() string {
-	return t.timestamp
+func (thisCoilTag *CoilTag) Timestamp() string {
+	return thisCoilTag.timestamp
 }
 
 //===================================DataState
-func (t *CoilTag) SetState(state bool) {
-	t.state = state
+func (thisCoilTag *CoilTag) SetState(state bool) {
+	thisCoilTag.state = state
 }
-func (t *CoilTag) State() bool {
-	return t.state
+func (thisCoilTag *CoilTag) State() bool {
+	return thisCoilTag.state
 }
