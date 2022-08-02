@@ -16,5 +16,5 @@ type ClientInterface interface {
 	SetTag(name string, address uint32, scanPeriod float64, dataType string) error
 	// SetTags(tags []tag.TagInterface) error
 
-	MarshalJSON() ([]byte, error)
+	MarshalJSON() ([]byte, error) ///-----------------
 }

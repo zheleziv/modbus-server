@@ -152,7 +152,7 @@ func (thisCommander *Commander) Setup(nt configuration.NodeTag, th *tag.TagInter
 func (thisCommander *Commander) StartChecking(quit chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	ticker := time.NewTicker(thisCommander.scanPeriod)
+	ticker := time.NewTicker(thisCommander.scanPeriod) // timer
 	var condition chan bool = make(chan bool)
 
 	wg.Add(1)

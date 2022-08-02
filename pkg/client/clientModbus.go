@@ -271,7 +271,7 @@ func (thisModbusClient *сlientModbus) Connect() error {
 	}
 }
 
-func (thisModbusClient *сlientModbus) Send(id int) error {
+func (thisModbusClient *сlientModbus) Send(id int) error { // roundTrip
 	if thisModbusClient.sender == nil {
 		thisModbusClient.tags[id].SetState(false)
 		return myerr.New("sender nil")
@@ -385,7 +385,7 @@ func (thisModbusClient *сlientModbus) startSender(tagId int, quit chan struct{}
 	// c.log.WriteWithTag(logger.INFO, c.state, c.tags[tagId].Name(), "Запущен опрос тега!")
 
 	ticker := time.NewTicker(time.Duration(thisModbusClient.tags[tagId].ScanPeriod()) * time.Second)
-
+	// defer ticker.Stop()
 	defer wg.Done()
 
 	for {
@@ -409,7 +409,7 @@ func (thisModbusClient *сlientModbus) startSender(tagId int, quit chan struct{}
 
 func (thisModbusClient *сlientModbus) tryConnect(quit chan struct{}, connection chan bool, wg *sync.WaitGroup) { /// connection day out
 	defer wg.Done()
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(0) // timer
 
 	for {
 		select {
@@ -423,19 +423,14 @@ func (thisModbusClient *сlientModbus) tryConnect(quit chan struct{}, connection
 				for i := 1; i <= thisModbusClient.connectionAttempts; i++ {
 					select {
 					case <-quit:
-						{
-							return
-						}
+						return
 					default:
-						{
-							err := thisModbusClient.Connect()
-							if err == nil {
-								if isChanged := thisModbusClient.setState(GOOD); isChanged {
-									thisModbusClient.log.Write(logger.INFO, thisModbusClient.state, "Подключенно!")
-								}
-								connection <- true
-								return
+						if err := thisModbusClient.Connect(); err == nil {
+							if isChanged := thisModbusClient.setState(GOOD); isChanged {
+								thisModbusClient.log.Write(logger.INFO, thisModbusClient.state, "Подключенно!")
 							}
+							connection <- true
+							return
 						}
 					}
 				}

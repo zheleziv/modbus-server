@@ -3,7 +3,7 @@
         "name":"testNode1.testTag1",
         "log": true,
         "stateCondition" : "good",
-        "valueCondition" : ">=24",
+        "valueCondition" : ">20,bit(6)",
         "logic": "and",
         "action": "run __debug_bin.exe",
         "actionTimeout": 30,

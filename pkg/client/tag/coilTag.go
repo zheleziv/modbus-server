@@ -3,7 +3,6 @@ package tag
 import (
 	"encoding/json"
 	"strings"
-	"sync"
 	"time"
 
 	myerr "zheleznovux.com/modbus-console/pkg"
@@ -11,32 +10,38 @@ import (
 
 type CoilTag struct {
 	name       string
-	dataType   string
 	address    uint16
 	scanPeriod float64
-	value      byte
 	timestamp  string
 	state      bool
-	rw         sync.RWMutex
+	value      byte
 }
 
-func (thisCoilTag *CoilTag) Setup(name string, address uint16, scanPeriod float64) error {
-	var err error
-	err = thisCoilTag.SetName(name)
+// конструктор по умолчанию ???надо ли заполнять значениями по умолчанию???
+func NewCoilTag() CoilTag {
+	return CoilTag{}
+}
+
+// конструктор с параметрами
+func NewCoilTagWithData(name string, address uint16, scanPeriod float64) (CoilTag, error) {
+	thisCoilTag := NewCoilTag()
+	err := thisCoilTag.SetName(name)
 	if err != nil {
-		return myerr.New(err.Error())
+		return thisCoilTag, myerr.New(err.Error())
 	}
+
 	err = thisCoilTag.SetAddress(address)
 	if err != nil {
-		return myerr.New(err.Error())
+		return thisCoilTag, myerr.New(err.Error())
 	}
-	thisCoilTag.SetDataType()
+
 	err = thisCoilTag.SetScanPeriod(scanPeriod)
 	if err != nil {
-		return myerr.New(err.Error())
+		return thisCoilTag, myerr.New(err.Error())
 	}
+
 	thisCoilTag.SetState(false)
-	return nil
+	return thisCoilTag, nil
 }
 
 func (thisCoilTag *CoilTag) MarshalJSON() ([]byte, error) {
@@ -49,7 +54,7 @@ func (thisCoilTag *CoilTag) MarshalJSON() ([]byte, error) {
 		State     bool
 	}{
 		Name:      thisCoilTag.name,
-		DataType:  thisCoilTag.dataType,
+		DataType:  thisCoilTag.DataType(),
 		Address:   thisCoilTag.address,
 		Value:     thisCoilTag.value,
 		Timestamp: thisCoilTag.timestamp,
@@ -66,16 +71,13 @@ func (thisCoilTag *CoilTag) SetName(name string) error {
 	thisCoilTag.name = tmp
 	return nil
 }
-func (thisCoilTag *CoilTag) Name() string {
+func (thisCoilTag CoilTag) Name() string { // а если я не хочу давать укзатель на приватное поле класса? или как законстантить метод?
 	return thisCoilTag.name
 }
 
-//===================================DataType
-func (thisCoilTag *CoilTag) SetDataType() {
-	thisCoilTag.dataType = COIL_TYPE
-}
-func (thisCoilTag *CoilTag) DataType() string {
-	return thisCoilTag.dataType
+// //===================================DataType
+func (thisCoilTag CoilTag) DataType() string {
+	return COIL_TYPE
 }
 
 //===================================Address
@@ -86,7 +88,7 @@ func (thisCoilTag *CoilTag) SetAddress(address uint16) error {
 	thisCoilTag.address = address
 	return nil
 }
-func (thisCoilTag *CoilTag) Address() uint16 {
+func (thisCoilTag CoilTag) Address() uint16 {
 	return thisCoilTag.address
 }
 
@@ -98,21 +100,17 @@ func (thisCoilTag *CoilTag) SetScanPeriod(time float64) error {
 	thisCoilTag.scanPeriod = time
 	return nil
 }
-func (thisCoilTag *CoilTag) ScanPeriod() float64 {
-	thisCoilTag.rw.Lock()
-	defer thisCoilTag.rw.Unlock()
+func (thisCoilTag CoilTag) ScanPeriod() float64 {
 	return thisCoilTag.scanPeriod
 }
 
 //===================================Value
 func (thisCoilTag *CoilTag) SetValue(value byte) {
-	thisCoilTag.rw.Lock()
-	defer thisCoilTag.rw.Unlock()
 	thisCoilTag.SetTimestamp()
 	thisCoilTag.SetState(true)
 	thisCoilTag.value = value
 }
-func (thisCoilTag *CoilTag) Value() byte {
+func (thisCoilTag CoilTag) Value() byte {
 	return thisCoilTag.value
 }
 
@@ -121,7 +119,7 @@ func (thisCoilTag *CoilTag) SetTimestamp() {
 	now := time.Now()
 	thisCoilTag.timestamp = now.Format(time.RFC3339)
 }
-func (thisCoilTag *CoilTag) Timestamp() string {
+func (thisCoilTag CoilTag) Timestamp() string {
 	return thisCoilTag.timestamp
 }
 
@@ -129,6 +127,6 @@ func (thisCoilTag *CoilTag) Timestamp() string {
 func (thisCoilTag *CoilTag) SetState(state bool) {
 	thisCoilTag.state = state
 }
-func (thisCoilTag *CoilTag) State() bool {
+func (thisCoilTag CoilTag) State() bool {
 	return thisCoilTag.state
 }

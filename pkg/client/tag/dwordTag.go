@@ -3,7 +3,6 @@ package tag
 import (
 	"encoding/json"
 	"strings"
-	"sync"
 	"time"
 
 	myerr "zheleznovux.com/modbus-console/pkg"
@@ -11,13 +10,38 @@ import (
 
 type DWordTag struct {
 	name       string
-	dataType   string
 	address    uint16
 	scanPeriod float64
 	value      uint32
 	timestamp  string
 	state      bool
-	rw         sync.RWMutex
+}
+
+// конструктор по умолчанию
+func NewDWordTag() DWordTag {
+	return DWordTag{}
+}
+
+// конструктор с параметрами
+func NewDWordTagWithData(name string, address uint16, scanPeriod float64) (DWordTag, error) {
+	thisDWordTag := NewDWordTag()
+	err := thisDWordTag.SetName(name)
+	if err != nil {
+		return thisDWordTag, myerr.New(err.Error())
+	}
+
+	err = thisDWordTag.SetAddress(address)
+	if err != nil {
+		return thisDWordTag, myerr.New(err.Error())
+	}
+
+	err = thisDWordTag.SetScanPeriod(scanPeriod)
+	if err != nil {
+		return thisDWordTag, myerr.New(err.Error())
+	}
+
+	thisDWordTag.SetState(false)
+	return thisDWordTag, nil
 }
 
 func (thisDWordTag *DWordTag) MarshalJSON() ([]byte, error) {
@@ -30,31 +54,12 @@ func (thisDWordTag *DWordTag) MarshalJSON() ([]byte, error) {
 		State     bool
 	}{
 		Name:      thisDWordTag.name,
-		DataType:  thisDWordTag.dataType,
+		DataType:  thisDWordTag.DataType(),
 		Address:   thisDWordTag.address,
 		Value:     thisDWordTag.value,
 		Timestamp: thisDWordTag.timestamp,
 		State:     thisDWordTag.state,
 	})
-}
-
-func (thisDWordTag *DWordTag) Setup(name string, address uint16, scanPeriod float64) error {
-	var err error
-	err = thisDWordTag.SetName(name)
-	if err != nil {
-		return myerr.New(err.Error())
-	}
-	err = thisDWordTag.SetAddress(address)
-	if err != nil {
-		return myerr.New(err.Error())
-	}
-	thisDWordTag.SetDataType()
-	err = thisDWordTag.SetScanPeriod(scanPeriod)
-	if err != nil {
-		return myerr.New(err.Error())
-	}
-	thisDWordTag.SetState(false)
-	return nil
 }
 
 //===================================Name
@@ -71,11 +76,8 @@ func (thisDWordTag *DWordTag) Name() string {
 }
 
 //===================================DataType
-func (thisDWordTag *DWordTag) SetDataType() {
-	thisDWordTag.dataType = DWORD_TYPE
-}
 func (thisDWordTag *DWordTag) DataType() string {
-	return thisDWordTag.dataType
+	return DWORD_TYPE
 }
 
 //===================================Address
@@ -109,8 +111,6 @@ func (thisDWordTag *DWordTag) State() bool {
 
 //===================================Value не интерфейсный метод
 func (thisDWordTag *DWordTag) SetValue(value uint32) {
-	thisDWordTag.rw.Lock()
-	defer thisDWordTag.rw.Unlock()
 	thisDWordTag.SetTimestamp()
 	thisDWordTag.SetState(true)
 	thisDWordTag.value = value

@@ -3,7 +3,6 @@ package tag
 import (
 	"encoding/json"
 	"strings"
-	"sync"
 	"time"
 
 	myerr "zheleznovux.com/modbus-console/pkg"
@@ -11,13 +10,38 @@ import (
 
 type WordTag struct {
 	name       string
-	dataType   string
 	address    uint16
 	scanPeriod float64
 	value      uint16
 	timestamp  string
 	state      bool
-	rw         sync.RWMutex
+}
+
+// конструктор по умолчанию
+func NewWordTag() WordTag {
+	return WordTag{}
+}
+
+// конструктор с параметрами
+func NewWordTagWithData(name string, address uint16, scanPeriod float64) (WordTag, error) {
+	thisWordTag := NewWordTag()
+	err := thisWordTag.SetName(name)
+	if err != nil {
+		return thisWordTag, myerr.New(err.Error())
+	}
+
+	err = thisWordTag.SetAddress(address)
+	if err != nil {
+		return thisWordTag, myerr.New(err.Error())
+	}
+
+	err = thisWordTag.SetScanPeriod(scanPeriod)
+	if err != nil {
+		return thisWordTag, myerr.New(err.Error())
+	}
+
+	thisWordTag.SetState(false)
+	return thisWordTag, nil
 }
 
 func (thisWordTag *WordTag) Setup(name string, address uint16, scanPeriod float64) error {
@@ -30,7 +54,6 @@ func (thisWordTag *WordTag) Setup(name string, address uint16, scanPeriod float6
 	if err != nil {
 		return myerr.New(err.Error())
 	}
-	thisWordTag.SetDataType()
 	err = thisWordTag.SetScanPeriod(scanPeriod)
 	if err != nil {
 		return myerr.New(err.Error())
@@ -49,7 +72,7 @@ func (thisWordTag *WordTag) MarshalJSON() ([]byte, error) {
 		State     bool
 	}{
 		Name:      thisWordTag.name,
-		DataType:  thisWordTag.dataType,
+		DataType:  thisWordTag.DataType(),
 		Address:   thisWordTag.address,
 		Value:     thisWordTag.value,
 		Timestamp: thisWordTag.timestamp,
@@ -70,12 +93,8 @@ func (thisWordTag *WordTag) Name() string {
 	return thisWordTag.name
 }
 
-//===================================DataType
-func (thisWordTag *WordTag) SetDataType() {
-	thisWordTag.dataType = WORD_TYPE
-}
 func (thisWordTag *WordTag) DataType() string {
-	return thisWordTag.dataType
+	return WORD_TYPE
 }
 
 //===================================Address
@@ -110,8 +129,8 @@ func (thisWordTag *WordTag) State() bool {
 
 //===================================Value не интерфейсный метод
 func (thisWordTag *WordTag) SetValue(value uint16) {
-	thisWordTag.rw.Lock()
-	defer thisWordTag.rw.Unlock()
+	// thisWordTag.rw.Lock()
+	// defer thisWordTag.rw.Unlock()
 	thisWordTag.SetTimestamp()
 	thisWordTag.SetState(true)
 	thisWordTag.value = value
