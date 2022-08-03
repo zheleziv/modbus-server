@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -16,7 +17,6 @@ import (
 
 type сlientModbus struct {
 	name               string
-	connectionType     string
 	ip                 string
 	port               int
 	slaveId            uint8
@@ -25,22 +25,25 @@ type сlientModbus struct {
 	log                logger.Logger
 	state              string
 	tags               []tag.TagInterface
-	sender             modbus.Client
+	mutex              sync.RWMutex
+	modbus.Client
 }
 
 func (c *сlientModbus) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		Name    string
-		Ip      string
-		SlaveId uint8
-		State   string
-		Tags    []tag.TagInterface
+		Name           string
+		ConnectionType string
+		Ip             string
+		SlaveId        uint8
+		State          string
+		Tags           []tag.TagInterface
 	}{
-		Name:    c.name,
-		Ip:      c.ip,
-		SlaveId: c.slaveId,
-		State:   c.state,
-		Tags:    c.tags,
+		Name:           c.name,
+		ConnectionType: c.Type(),
+		Ip:             c.ip,
+		SlaveId:        c.slaveId,
+		State:          c.state,
+		Tags:           c.tags,
 	})
 }
 
@@ -52,7 +55,7 @@ func (thisModbusClient *сlientModbus) Name() string {
 }
 func (thisModbusClient *сlientModbus) SetName(name string) error {
 	if strings.TrimSpace(name) == "" {
-		return myerr.New("invalid client name. {setter client name}")
+		return myerr.New("invalid client name")
 	}
 	thisModbusClient.name = name
 	return nil
@@ -60,10 +63,7 @@ func (thisModbusClient *сlientModbus) SetName(name string) error {
 
 // =================================Type
 func (thisModbusClient *сlientModbus) Type() string {
-	return thisModbusClient.connectionType
-}
-func (thisModbusClient *сlientModbus) SetType() {
-	thisModbusClient.connectionType = MODBUS_TCP
+	return MODBUS_TCP
 }
 
 // ===================================IP
@@ -75,7 +75,7 @@ func (thisModbusClient *сlientModbus) Ip() string {
 func (thisModbusClient *сlientModbus) SetIp(ip string) error {
 	ipAddr := net.ParseIP(strings.TrimSpace(ip))
 	if ipAddr == nil {
-		return myerr.New("invalid client Ip. {setter client Ip}")
+		return myerr.New("invalid client Ip")
 	} else {
 		thisModbusClient.ip = ip
 		return nil
@@ -88,7 +88,7 @@ func (thisModbusClient *сlientModbus) ConnectionAttempts() int {
 }
 func (thisModbusClient *сlientModbus) SetConnectionAttempts(ca int) error {
 	if ca <= 0 {
-		return myerr.New("invalid client connection attempts. {setter client connection attempts}")
+		return myerr.New("invalid client connection attempts")
 	}
 	thisModbusClient.connectionAttempts = ca
 	return nil
@@ -125,16 +125,6 @@ func (thisModbusClient *сlientModbus) Tags() []tag.TagInterface {
 	return thisModbusClient.tags
 }
 
-// func (c *сlientModbus) SetTags(tags []tag.TagInterface) error {
-// 	for id := range tags {
-// 		if _, err := c.TagByName(tags[id].Name()); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	c.tags = tags
-// 	return nil
-// }
-
 // ============================TagById
 func (thisModbusClient *сlientModbus) TagById(id int) (tag.TagInterface, error) {
 	if (id >= len(thisModbusClient.tags)) || (id < 0) {
@@ -160,6 +150,62 @@ func (thisModbusClient *сlientModbus) SetTag(name string, address uint32, scanP
 		if err != nil {
 			return myerr.New(err.Error())
 		}
+
+		fmt.Println(reflect.TypeOf(t))
+		switch v := t.(type) {
+		case *tag.CoilTag:
+			v.ReadFunc = func() (byte, error) {
+				thisModbusClient.mutex.Lock()
+				resp, err := thisModbusClient.ReadDiscreteInputs(thisModbusClient.slaveId, v.Address(), 1)
+				thisModbusClient.mutex.Unlock()
+				if err != nil {
+					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ с ошибкой")
+					return 0, myerr.New(err.Error())
+				}
+
+				if len(resp) == 0 {
+					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен пустой ответ")
+					return 0, myerr.New("empty response")
+				}
+				thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ:"+fmt.Sprintf("%d", resp[0]))
+				return resp[0], nil
+			}
+		case *tag.WordTag:
+			v.ReadFunc = func() (uint16, error) {
+				thisModbusClient.mutex.Lock()
+				resp, err := thisModbusClient.ReadHoldingRegisters(thisModbusClient.slaveId, v.Address(), 1)
+				thisModbusClient.mutex.Unlock()
+				if err != nil {
+					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ с ошибкой")
+					return 0, myerr.New(err.Error())
+				}
+
+				if len(resp) == 0 {
+					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен пустой ответ")
+					return 0, myerr.New("empty response")
+				}
+				thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ:"+fmt.Sprintf("%d", resp[0]))
+				return resp[0], nil
+			}
+		case *tag.DWordTag:
+			v.ReadFunc = func() (uint32, error) {
+				thisModbusClient.mutex.Lock()
+				resp, err := thisModbusClient.ReadHoldingRegisters(thisModbusClient.slaveId, v.Address(), 2)
+				thisModbusClient.mutex.Unlock()
+				if err != nil {
+					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ с ошибкой")
+					return 0, myerr.New(err.Error())
+				}
+
+				if len(resp) < 2 {
+					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен пустой ответ")
+					return 0, myerr.New("empty response")
+				}
+				thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ:"+fmt.Sprintf("%d", (uint32(resp[0])<<16)+uint32(resp[1])))
+				return (uint32(resp[0]) << 16) + uint32(resp[1]), nil
+			}
+		}
+
 		thisModbusClient.tags = append(thisModbusClient.tags, t)
 		return nil
 	}
@@ -224,128 +270,64 @@ func NewClinetModbus(ip string, port int, slaveID uint8, name string, debug bool
 	if err != nil {
 		return nil, myerr.New(err.Error())
 	}
-	c.SetType()
+
 	err = c.SetIp(ip)
 	if err != nil {
 		return nil, myerr.New(err.Error())
 	}
+
 	err = c.SetPort(port)
 	if err != nil {
 		return nil, myerr.New(err.Error())
 	}
+
 	err = c.SetSalveId(slaveID)
 	if err != nil {
 		return nil, myerr.New(err.Error())
 	}
+
 	err = c.SetConnectionAttempts(ConnectionAttempts)
 	if err != nil {
 		return nil, myerr.New(err.Error())
 	}
+
 	err = c.SetConnectionTimeout(ConnectionTimeout)
 	if err != nil {
 		return nil, myerr.New(err.Error())
 	}
+
 	c.log = logger.Logger{
 		ParentNodeName: c.name,
 		ParentNodeIp:   c.ip,
-		IsLogOutput:    debug,
+		IsDebug:        debug,
 	}
+
+	provider := modbus.NewTCPClientProvider(
+		c.ip + ":" + fmt.Sprint(c.port))
+	c.Client = modbus.NewClient(provider)
 
 	return &c, nil
 }
 
 //======================инициализация========================}
 
-func (thisModbusClient *сlientModbus) Connect() error {
-	provider := modbus.NewTCPClientProvider(
-		thisModbusClient.ip + ":" + fmt.Sprint(thisModbusClient.port))
-	thisModbusClient.sender = modbus.NewClient(provider)
-	defer thisModbusClient.sender.Close()
-
+func (thisModbusClient *сlientModbus) checkConnect() error {
+	defer thisModbusClient.Close()
+	defer thisModbusClient.mutex.Unlock()
 	//устанавливаем соединение
-	err := thisModbusClient.sender.Connect()
+	thisModbusClient.mutex.Lock()
+	err := thisModbusClient.Connect()
 	if err != nil {
-		return myerr.New("Ошибка соединения! " + err.Error())
+		return myerr.New(err.Error())
 	} else {
 		return nil
-	}
-}
-
-func (thisModbusClient *сlientModbus) Send(id int) error { // roundTrip
-	if thisModbusClient.sender == nil {
-		thisModbusClient.tags[id].SetState(false)
-		return myerr.New("sender nil")
-	}
-	defer thisModbusClient.sender.Close()
-
-	//новые типы должны быть указаны здесь
-	switch thisModbusClient.tags[id].DataType() {
-	case tag.COIL_TYPE:
-		{
-			resp, err := thisModbusClient.sender.ReadDiscreteInputs(thisModbusClient.slaveId, thisModbusClient.tags[id].Address(), 1)
-
-			if err != nil {
-				thisModbusClient.tags[id].SetState(false)
-				return myerr.New(err.Error())
-			}
-
-			if len(resp) > 0 {
-				thisModbusClient.tags[id].(*tag.CoilTag).SetValue(resp[0])
-				// c.log.WriteWithTag(logger.INFO, c.state, c.tags[id].Name(), "Значение: "+strconv.Itoa(int(resp[0]))+".")
-				return nil
-			} else {
-				thisModbusClient.tags[id].SetState(false)
-				// c.log.WriteWithTag(logger.WARNING, c.state, c.tags[id].Name(), "Значение не было считано!")
-				return nil
-			}
-		}
-	case tag.WORD_TYPE:
-		{
-			resp, err := thisModbusClient.sender.ReadHoldingRegisters(thisModbusClient.slaveId, thisModbusClient.tags[id].Address(), 1)
-
-			if err != nil {
-				thisModbusClient.tags[id].SetState(false)
-				return myerr.New(err.Error())
-			}
-
-			if len(resp) > 0 {
-				thisModbusClient.tags[id].(*tag.WordTag).SetValue(resp[0])
-				// c.log.WriteWithTag(logger.INFO, c.state, c.tags[id].Name(), "Значение: "+strconv.Itoa(int(resp[0]))+".")
-				return nil
-			} else {
-				thisModbusClient.tags[id].SetState(false)
-				// c.log.WriteWithTag(logger.WARNING, c.state, c.tags[id].Name(), "Значение не было считано!")
-				return nil
-			}
-		}
-	case tag.DWORD_TYPE:
-		{
-			resp, err := thisModbusClient.sender.ReadHoldingRegisters(thisModbusClient.slaveId, thisModbusClient.tags[id].Address(), 2)
-
-			if err != nil {
-				thisModbusClient.tags[id].SetState(false)
-				return myerr.New(err.Error())
-			}
-
-			if len(resp) > 1 {
-				var tmp uint32 = (uint32(resp[0]) << 16) + uint32(resp[1])
-				thisModbusClient.tags[id].(*tag.DWordTag).SetValue(tmp)
-				// c.log.WriteWithTag(logger.INFO, c.state, c.tags[id].Name(), "Значение: "+strconv.Itoa(int(tmp))+".")
-				return nil
-			} else {
-				thisModbusClient.tags[id].SetState(false)
-				// c.log.WriteWithTag(logger.WARNING, c.state, c.tags[id].Name(), "Значение не было считано!")
-				return nil
-			}
-		}
-	default:
-		return myerr.New("resp nil")
 	}
 }
 
 func (thisModbusClient *сlientModbus) Start(stop chan struct{}, wg *sync.WaitGroup) {
 	connection := make(chan bool)
 	quit := make(chan struct{})
+
 	defer wg.Done()
 
 	var wgi sync.WaitGroup
@@ -361,55 +343,53 @@ func (thisModbusClient *сlientModbus) Start(stop chan struct{}, wg *sync.WaitGr
 			}
 		case cb := <-connection: // канал снизу. Плохое подключение => реконект
 			{
+				fmt.Println(cb)
+				close(quit)
+				wgi.Wait()
+				quit = make(chan struct{})
 				if cb {
-					close(quit)
-					wgi.Wait()
-					quit = make(chan struct{})
 					for tagId := range thisModbusClient.tags {
 						wgi.Add(1)
 						go thisModbusClient.startSender(tagId, quit, &wgi, connection)
 					}
-				} else {
-					close(quit)
-					wgi.Wait()
-					quit = make(chan struct{})
-					wgi.Add(1)
-					go thisModbusClient.tryConnect(stop, connection, &wgi)
+					continue
 				}
+				wgi.Add(1)
+				go thisModbusClient.tryConnect(stop, connection, &wgi)
 			}
 		}
 	}
 }
 
 func (thisModbusClient *сlientModbus) startSender(tagId int, quit chan struct{}, wg *sync.WaitGroup, connect chan bool) {
-	// c.log.WriteWithTag(logger.INFO, c.state, c.tags[tagId].Name(), "Запущен опрос тега!")
-
-	ticker := time.NewTicker(time.Duration(thisModbusClient.tags[tagId].ScanPeriod()) * time.Second)
-	// defer ticker.Stop()
+	thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), "Запущен опрос тега!")
 	defer wg.Done()
+
+	timer := time.NewTimer(1)
 
 	for {
 		select {
 		case <-quit:
-			{
-				// c.log.WriteWithTag(logger.INFO, c.state, c.tags[tagId].Name(), "Завершен опрос тега!")
+			thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), "Завершен опрос тега!")
+			return
+		case <-timer.C:
+			timer.Stop()
+			if thisModbusClient.checkConnect() != nil {
+				connect <- false
 				return
 			}
-		case <-ticker.C:
-			{
-				err := thisModbusClient.Send(tagId)
-				if err != nil {
-					thisModbusClient.log.WriteWithTag(logger.ERROR, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), err.Error())
-					connect <- false
-				}
+			err := thisModbusClient.tags[tagId].ReadDevice()
+			if err != nil {
+				thisModbusClient.log.WriteWithTag(logger.ERROR, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), err.Error())
 			}
+			timer.Reset(time.Duration(thisModbusClient.tags[tagId].ScanPeriod()) * time.Second)
 		}
 	}
 }
 
 func (thisModbusClient *сlientModbus) tryConnect(quit chan struct{}, connection chan bool, wg *sync.WaitGroup) { /// connection day out
 	defer wg.Done()
-	ticker := time.NewTicker(0) // timer
+	timer := time.NewTimer(1)
 
 	for {
 		select {
@@ -417,15 +397,15 @@ func (thisModbusClient *сlientModbus) tryConnect(quit chan struct{}, connection
 			{
 				return
 			}
-		case <-ticker.C:
+		case <-timer.C:
 			{
-				ticker.Stop()
+				timer.Stop()
 				for i := 1; i <= thisModbusClient.connectionAttempts; i++ {
 					select {
 					case <-quit:
 						return
 					default:
-						if err := thisModbusClient.Connect(); err == nil {
+						if err := thisModbusClient.checkConnect(); err == nil {
 							if isChanged := thisModbusClient.setState(GOOD); isChanged {
 								thisModbusClient.log.Write(logger.INFO, thisModbusClient.state, "Подключенно!")
 							}
@@ -438,7 +418,7 @@ func (thisModbusClient *сlientModbus) tryConnect(quit chan struct{}, connection
 					thisModbusClient.log.Write(logger.WARNING, thisModbusClient.state, "Не удалось подключиться!")
 				}
 
-				ticker.Reset(thisModbusClient.connectionTimeout)
+				timer.Reset(thisModbusClient.connectionTimeout)
 			}
 		}
 	}

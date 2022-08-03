@@ -2,6 +2,7 @@ package tag
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -15,16 +16,29 @@ type DWordTag struct {
 	value      uint32
 	timestamp  string
 	state      bool
+	ReadFunc   func() (uint32, error)
+}
+
+func (thisDWordTag *DWordTag) ReadDevice() error {
+	val, err := thisDWordTag.ReadFunc()
+	if err != nil {
+		thisDWordTag.SetState(false)
+		return myerr.New(err.Error())
+	}
+
+	thisDWordTag.setValue(val)
+	return nil
 }
 
 // конструктор по умолчанию
-func NewDWordTag() DWordTag {
-	return DWordTag{}
+func NewDWordTag() *DWordTag {
+	return &DWordTag{}
 }
 
 // конструктор с параметрами
-func NewDWordTagWithData(name string, address uint16, scanPeriod float64) (DWordTag, error) {
+func NewDWordTagWithData(name string, address uint16, scanPeriod float64) (*DWordTag, error) {
 	thisDWordTag := NewDWordTag()
+
 	err := thisDWordTag.SetName(name)
 	if err != nil {
 		return thisDWordTag, myerr.New(err.Error())
@@ -39,7 +53,7 @@ func NewDWordTagWithData(name string, address uint16, scanPeriod float64) (DWord
 	if err != nil {
 		return thisDWordTag, myerr.New(err.Error())
 	}
-
+	fmt.Println("213")
 	thisDWordTag.SetState(false)
 	return thisDWordTag, nil
 }
@@ -71,17 +85,17 @@ func (thisDWordTag *DWordTag) SetName(name string) error {
 	thisDWordTag.name = tmp
 	return nil
 }
-func (thisDWordTag *DWordTag) Name() string {
+func (thisDWordTag DWordTag) Name() string {
 	return thisDWordTag.name
 }
 
 //===================================DataType
-func (thisDWordTag *DWordTag) DataType() string {
+func (thisDWordTag DWordTag) DataType() string {
 	return DWORD_TYPE
 }
 
 //===================================Address
-func (thisDWordTag *DWordTag) Address() uint16 {
+func (thisDWordTag DWordTag) Address() uint16 {
 	return thisDWordTag.address
 }
 func (thisDWordTag *DWordTag) SetAddress(address uint16) error {
@@ -97,7 +111,7 @@ func (thisDWordTag *DWordTag) SetTimestamp() {
 	now := time.Now()
 	thisDWordTag.timestamp = now.Format(time.RFC3339)
 }
-func (thisDWordTag *DWordTag) Timestamp() string {
+func (thisDWordTag DWordTag) Timestamp() string {
 	return thisDWordTag.timestamp
 }
 
@@ -105,22 +119,22 @@ func (thisDWordTag *DWordTag) Timestamp() string {
 func (thisDWordTag *DWordTag) SetState(state bool) {
 	thisDWordTag.state = state
 }
-func (thisDWordTag *DWordTag) State() bool {
+func (thisDWordTag DWordTag) State() bool {
 	return thisDWordTag.state
 }
 
 //===================================Value не интерфейсный метод
-func (thisDWordTag *DWordTag) SetValue(value uint32) {
+func (thisDWordTag *DWordTag) setValue(value uint32) {
 	thisDWordTag.SetTimestamp()
 	thisDWordTag.SetState(true)
 	thisDWordTag.value = value
 }
-func (thisDWordTag *DWordTag) Value() uint32 {
+func (thisDWordTag DWordTag) Value() uint32 {
 	return thisDWordTag.value
 }
 
 //===================================ScanPeriod
-func (thisDWordTag *DWordTag) ScanPeriod() float64 {
+func (thisDWordTag DWordTag) ScanPeriod() float64 {
 	return thisDWordTag.scanPeriod
 }
 func (thisDWordTag *DWordTag) SetScanPeriod(time float64) error {

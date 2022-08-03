@@ -11,6 +11,9 @@ import (
 	myerr "zheleznovux.com/modbus-console/pkg"
 )
 
+type WinNotifyerApp struct {
+}
+
 type WinConfig struct {
 	nodeCommand []configuration.NodeTag
 }
@@ -21,6 +24,10 @@ type WinConfigMgr struct {
 
 var winConfigMgr = &WinConfigMgr{}
 var changeCh chan int = make(chan int)
+
+func (a *WinNotifyerApp) Callback(conf *configuration.ConfigHandler) {
+	changeCh <- 1
+}
 
 func (a *WinConfigMgr) Callback(conf *configuration.ConfigHandler) {
 	winConfig := &WinConfig{}
@@ -37,11 +44,6 @@ func InitConfig(file string) {
 	}
 
 	conf.AddObserver(winConfigMgr)
-
-	var winConfig WinConfig
-	winConfig.nodeCommand = conf.GetConfig().(*configuration.ConfigurationDataWin).NODES
-
-	winConfigMgr.config.Store(&winConfig)
 }
 
 func Run(th *server.Server) {
@@ -57,6 +59,7 @@ func Run(th *server.Server) {
 		winConfig := winConfigMgr.config.Load().(*WinConfig)
 		for i := range winConfig.nodeCommand {
 			var com commander.Commander
+
 			tag, err := th.GetTagByName(winConfig.nodeCommand[i].Name)
 			if err != nil {
 				fmt.Println(myerr.New(err.Error()))

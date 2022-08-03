@@ -167,6 +167,7 @@ func (thisCommander *Commander) StartChecking(quit chan struct{}, wg *sync.WaitG
 			{
 				ticker.Stop()
 				condition <- thisCommander.cheker.CheckValues(*thisCommander.th_ptr)
+
 				ticker.Reset(thisCommander.scanPeriod)
 			}
 		}

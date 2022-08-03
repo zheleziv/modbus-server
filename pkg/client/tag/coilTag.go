@@ -15,16 +15,30 @@ type CoilTag struct {
 	timestamp  string
 	state      bool
 	value      byte
+
+	ReadFunc func() (byte, error)
 }
 
-// конструктор по умолчанию ???надо ли заполнять значениями по умолчанию???
-func NewCoilTag() CoilTag {
-	return CoilTag{}
+func (thisCoilTag *CoilTag) ReadDevice() error {
+	val, err := thisCoilTag.ReadFunc()
+	if err != nil {
+		thisCoilTag.SetState(false)
+		return myerr.New(err.Error())
+	}
+
+	thisCoilTag.setValue(val)
+	return nil
+}
+
+// конструктор по умолчанию
+func NewCoilTag() *CoilTag {
+	return &CoilTag{}
 }
 
 // конструктор с параметрами
-func NewCoilTagWithData(name string, address uint16, scanPeriod float64) (CoilTag, error) {
+func NewCoilTagWithData(name string, address uint16, scanPeriod float64) (*CoilTag, error) {
 	thisCoilTag := NewCoilTag()
+
 	err := thisCoilTag.SetName(name)
 	if err != nil {
 		return thisCoilTag, myerr.New(err.Error())
@@ -71,7 +85,7 @@ func (thisCoilTag *CoilTag) SetName(name string) error {
 	thisCoilTag.name = tmp
 	return nil
 }
-func (thisCoilTag CoilTag) Name() string { // а если я не хочу давать укзатель на приватное поле класса? или как законстантить метод?
+func (thisCoilTag CoilTag) Name() string {
 	return thisCoilTag.name
 }
 
@@ -105,7 +119,7 @@ func (thisCoilTag CoilTag) ScanPeriod() float64 {
 }
 
 //===================================Value
-func (thisCoilTag *CoilTag) SetValue(value byte) {
+func (thisCoilTag *CoilTag) setValue(value byte) {
 	thisCoilTag.SetTimestamp()
 	thisCoilTag.SetState(true)
 	thisCoilTag.value = value

@@ -32,6 +32,7 @@ func New() *Server {
 }
 
 func (thisServer *Server) Setup(confHandler *configuration.ConfigHandler) {
+	fmt.Println("2")
 	config := confHandler.GetConfig()
 	rtn := make([]client.ClientInterface, 0)
 
@@ -92,7 +93,6 @@ func (thisServer *Server) GetData() []client.ClientInterface {
 }
 
 func (thisServer *Server) GetTagByName(name string) (tag.TagInterface, error) {
-
 	split := strings.Split(name, ".")
 	if len(split) != 2 {
 		return nil, myerr.New("invalid name")

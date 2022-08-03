@@ -4,6 +4,7 @@ import (
 	myerr "zheleznovux.com/modbus-console/pkg"
 )
 
+// опустить абстракцию ниже в value
 type TagInterface interface { // виртуальные поля, которыми должны обладать все тэги
 	SetName(string) error // имя
 	Name() string
@@ -14,14 +15,15 @@ type TagInterface interface { // виртуальные поля, которым
 	SetScanPeriod(float64) error // период сканирования
 	ScanPeriod() float64
 
-	// SetDataType()
 	DataType() string // строка указывающая на тип данных тэга
 
-	SetState(bool) // состоаяние подключения
+	SetState(bool) // состояние подключения
 	State() bool
 
-	SetTimestamp() // временная ветка
+	SetTimestamp() // временная метка
 	Timestamp() string
+
+	ReadDevice() error
 }
 
 func NewTag(name string, address uint16, scanPeriod float64, dataType string) (TagInterface, error) {
@@ -29,29 +31,17 @@ func NewTag(name string, address uint16, scanPeriod float64, dataType string) (T
 	var err error
 
 	if dataType == "" {
-		return nil, myerr.New("invalid dataType")
+		return nil, myerr.New("invalid tag dataType")
 	}
 	switch dataType {
 	case COIL_TYPE:
-		{
-			var tag CoilTag
-			tag, err = NewCoilTagWithData(name, address, scanPeriod)
-			tagI = &tag
-		}
+		tagI, err = NewCoilTagWithData(name, address, scanPeriod)
 	case WORD_TYPE:
-		{
-			var tag WordTag
-			tag, err = NewWordTagWithData(name, address, scanPeriod)
-			tagI = &tag
-		}
+		tagI, err = NewWordTagWithData(name, address, scanPeriod)
 	case DWORD_TYPE:
-		{
-			var tag DWordTag
-			tag, err = NewDWordTagWithData(name, address, scanPeriod)
-			tagI = &tag
-		}
+		tagI, err = NewDWordTagWithData(name, address, scanPeriod)
 	default:
-		return nil, myerr.New("invalid dataType")
+		return nil, myerr.New("invalid tag dataType")
 	}
 
 	if err != nil {
