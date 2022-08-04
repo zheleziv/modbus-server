@@ -65,7 +65,11 @@ func Run(th *server.Server) {
 				fmt.Println(myerr.New(err.Error()))
 				continue
 			}
-			com.Setup(winConfig.nodeCommand[i], &tag)
+			err = com.Setup(winConfig.nodeCommand[i], &tag)
+			if err != nil {
+				fmt.Println(myerr.New(err.Error()))
+				continue
+			}
 			wg.Add(1)
 			go com.StartChecking(quit, &wg)
 		}

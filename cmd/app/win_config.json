@@ -1,12 +1,12 @@
 {"NODES":[
     {
-        "name":"testNode1.testTag1",
+        "name":"testNode1.testTag2",
         "log": true,
         "stateCondition" : "good",
-        "valueCondition" : ">20",
+        "valueCondition" : ">=231",
         "logic": "and",
         "action": "run __debug_bin.exe",
-        "actionTimeout": 30,
+        "actionTimeout": 10,
         "scanPeriod": 5
     }
 ]}

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +19,7 @@ type сlientModbus struct {
 	ip                 string
 	port               int
 	slaveId            uint8
-	connectionAttempts int
+	connectionAttempts uint
 	connectionTimeout  time.Duration
 	log                logger.Logger
 	state              string
@@ -83,10 +82,10 @@ func (thisModbusClient *сlientModbus) SetIp(ip string) error {
 }
 
 // ===================ConnectionAttempts
-func (thisModbusClient *сlientModbus) ConnectionAttempts() int {
+func (thisModbusClient *сlientModbus) ConnectionAttempts() uint {
 	return thisModbusClient.connectionAttempts
 }
-func (thisModbusClient *сlientModbus) SetConnectionAttempts(ca int) error {
+func (thisModbusClient *сlientModbus) SetConnectionAttempts(ca uint) error {
 	if ca <= 0 {
 		return myerr.New("invalid client connection attempts")
 	}
@@ -151,7 +150,6 @@ func (thisModbusClient *сlientModbus) SetTag(name string, address uint32, scanP
 			return myerr.New(err.Error())
 		}
 
-		fmt.Println(reflect.TypeOf(t))
 		switch v := t.(type) {
 		case *tag.CoilTag:
 			v.ReadFunc = func() (byte, error) {
@@ -263,7 +261,8 @@ func (thisModbusClient *сlientModbus) setState(state string) (isChanged bool) {
 }
 
 // ==========================Constructor
-func NewClinetModbus(ip string, port int, slaveID uint8, name string, debug bool, ConnectionAttempts int, ConnectionTimeout float64) (*сlientModbus, error) {
+// конструктор Modbus TCP/IP клиента с проверками
+func NewClinetModbus(ip string, port int, slaveID uint8, name string, debug bool, ConnectionAttempts uint, ConnectionTimeout float64) (*сlientModbus, error) {
 	var c сlientModbus
 
 	err := c.SetName(name)
@@ -336,33 +335,28 @@ func (thisModbusClient *сlientModbus) Start(stop chan struct{}, wg *sync.WaitGr
 	for {
 		select {
 		case <-stop: //канал сверху. Завершение сессии
-			{
-				close(quit)
-				wgi.Wait()
-				return
-			}
+			close(quit)
+			wgi.Wait()
+			return
 		case cb := <-connection: // канал снизу. Плохое подключение => реконект
-			{
-				fmt.Println(cb)
-				close(quit)
-				wgi.Wait()
-				quit = make(chan struct{})
-				if cb {
-					for tagId := range thisModbusClient.tags {
-						wgi.Add(1)
-						go thisModbusClient.startSender(tagId, quit, &wgi, connection)
-					}
-					continue
+			close(quit)
+			wgi.Wait()
+			quit = make(chan struct{})
+			if cb {
+				for tagId := range thisModbusClient.tags {
+					wgi.Add(1)
+					go thisModbusClient.startSender(tagId, quit, &wgi, connection)
 				}
-				wgi.Add(1)
-				go thisModbusClient.tryConnect(stop, connection, &wgi)
+				continue
 			}
+			wgi.Add(1)
+			go thisModbusClient.tryConnect(stop, connection, &wgi)
 		}
 	}
 }
 
 func (thisModbusClient *сlientModbus) startSender(tagId int, quit chan struct{}, wg *sync.WaitGroup, connect chan bool) {
-	thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), "Запущен опрос тега!")
+	thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), "Запущен опрос тега")
 	defer wg.Done()
 
 	timer := time.NewTimer(1)
@@ -370,7 +364,7 @@ func (thisModbusClient *сlientModbus) startSender(tagId int, quit chan struct{}
 	for {
 		select {
 		case <-quit:
-			thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), "Завершен опрос тега!")
+			thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, thisModbusClient.tags[tagId].Name(), "Завершен опрос тега")
 			return
 		case <-timer.C:
 			timer.Stop()
@@ -394,32 +388,28 @@ func (thisModbusClient *сlientModbus) tryConnect(quit chan struct{}, connection
 	for {
 		select {
 		case <-quit:
-			{
-				return
-			}
+			return
 		case <-timer.C:
-			{
-				timer.Stop()
-				for i := 1; i <= thisModbusClient.connectionAttempts; i++ {
-					select {
-					case <-quit:
-						return
-					default:
-						if err := thisModbusClient.checkConnect(); err == nil {
-							if isChanged := thisModbusClient.setState(GOOD); isChanged {
-								thisModbusClient.log.Write(logger.INFO, thisModbusClient.state, "Подключенно!")
-							}
-							connection <- true
-							return
+			timer.Stop()
+			for i := 1; i <= int(thisModbusClient.connectionAttempts); i++ {
+				select {
+				case <-quit:
+					return
+				default:
+					if err := thisModbusClient.checkConnect(); err == nil {
+						if isChanged := thisModbusClient.setState(GOOD); isChanged {
+							thisModbusClient.log.Write(logger.INFO, thisModbusClient.state, "Подключенно")
 						}
+						connection <- true
+						return
 					}
 				}
-				if isChanged := thisModbusClient.setState(BAD); isChanged {
-					thisModbusClient.log.Write(logger.WARNING, thisModbusClient.state, "Не удалось подключиться!")
-				}
-
-				timer.Reset(thisModbusClient.connectionTimeout)
 			}
+			if isChanged := thisModbusClient.setState(BAD); isChanged {
+				thisModbusClient.log.Write(logger.WARNING, thisModbusClient.state, "Не удалось подключиться")
+			}
+
+			timer.Reset(thisModbusClient.connectionTimeout)
 		}
 	}
 }

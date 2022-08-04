@@ -10,6 +10,7 @@ import (
 	myerr "zheleznovux.com/modbus-console/pkg"
 )
 
+const TIME_SLEEP_SECOND = 2 // времени между проверками измененеия конфига
 // абстрактный класс, наследуемый ConfigurationDataApp и ConfigurationDataWin
 type ConfigurationData interface {
 	Setup(*ConfigHandler) error
@@ -106,7 +107,7 @@ func (thisConfigHandler *ConfigHandler) reload() {
 				}
 			}
 		}()
-		ticker.Reset(time.Second * 5)
+		ticker.Reset(time.Second * TIME_SLEEP_SECOND)
 	}
 }
 

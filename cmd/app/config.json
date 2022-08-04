@@ -6,14 +6,14 @@
         "IP": "127.0.0.1",
         "port":502,
         "ID":1,
-        "Log": false,
+        "Log": true,
         "ConnectionTimeout": 10,
         "ConnectionAttempts": 5,
         "TAGS": [
             {
                 "name": "testTag2",
-                "address":100004,
-                "dataType": "coil",
+                "address":400008,
+                "dataType": "word",
                 "scanPeriod":10
             }
         ]

@@ -101,7 +101,7 @@ func verifyScanPeriod(sp float64) (time.Duration, error) {
 func (thisCommander *Commander) Setup(nt configuration.NodeTag, th *tag.TagInterface) error {
 	var err error
 
-	thisCommander.name, err = verifyName(nt.Name) // проверка из cdApp
+	thisCommander.name, err = verifyName(nt.Name)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
@@ -131,7 +131,7 @@ func (thisCommander *Commander) Setup(nt configuration.NodeTag, th *tag.TagInter
 		return myerr.New(err.Error())
 	}
 
-	thisCommander.scanPeriod, err = verifyScanPeriod(nt.ScanPeriod) // проверка из cdApp
+	thisCommander.scanPeriod, err = verifyScanPeriod(nt.ScanPeriod)
 	if err != nil {
 		return myerr.New(err.Error())
 	}
@@ -142,6 +142,7 @@ func (thisCommander *Commander) Setup(nt configuration.NodeTag, th *tag.TagInter
 		ParentNodeName: thisCommander.name,
 		IsLogOutput:    nt.Log,
 	}
+
 	return nil
 }
 
@@ -153,7 +154,7 @@ func (thisCommander *Commander) StartChecking(quit chan struct{}, wg *sync.WaitG
 	defer wg.Done()
 
 	ticker := time.NewTicker(thisCommander.scanPeriod) // timer
-	var condition chan bool = make(chan bool)
+	condition := make(chan bool)
 
 	wg.Add(1)
 	go thisCommander.startCommand(condition, quit, wg)
@@ -166,7 +167,7 @@ func (thisCommander *Commander) StartChecking(quit chan struct{}, wg *sync.WaitG
 		case <-ticker.C:
 			{
 				ticker.Stop()
-				condition <- thisCommander.cheker.CheckValues(*thisCommander.th_ptr)
+				condition <- thisCommander.generalTagCheck()
 
 				ticker.Reset(thisCommander.scanPeriod)
 			}
@@ -174,12 +175,18 @@ func (thisCommander *Commander) StartChecking(quit chan struct{}, wg *sync.WaitG
 	}
 }
 
+func (thisCommander *Commander) generalTagCheck() bool {
+	if thisCommander.stateCondition == (*thisCommander.th_ptr).State() {
+		return thisCommander.cheker.CheckValues(*thisCommander.th_ptr)
+	}
+	return false
+}
+
 func (thisCommander *Commander) startCommand(condition chan bool, quit chan struct{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	timeBetweenTick := thisCommander.actionTimeout / 5
-	tickerToCommand := time.NewTicker(thisCommander.actionTimeout)
-	tickerToCommand.Stop()
+	timer := &time.Timer{}
 	tickCount := 0
 
 	var lastCondition bool
@@ -188,27 +195,28 @@ func (thisCommander *Commander) startCommand(condition chan bool, quit chan stru
 		case <-quit:
 			{
 				if lastCondition {
-					thisCommander.log.Write(INFO, "Таймер команды остановлен из-за смены конфига!")
+					thisCommander.log.Write(INFO, "Таймер команды остановлен")
 				}
 				return
 			}
-		case <-tickerToCommand.C:
+		case <-timer.C:
 			{
-				tickerToCommand.Stop()
-				tickCount++
-				if tickCount != 5 {
-					timeToCommand := thisCommander.actionTimeout - time.Duration(tickCount)*timeBetweenTick
-					thisCommander.log.Write(INFO, "Команда "+thisCommander.action+", до завершения таймера: "+timeToCommand.String()+".")
+				timer.Stop()
 
+				if tickCount < 5 {
+					timeToCommand := thisCommander.actionTimeout - time.Duration(tickCount)*timeBetweenTick
+					thisCommander.log.Write(INFO, "Команда "+thisCommander.action+", до завершения таймера: "+timeToCommand.String())
+					tickCount++
 				} else {
 					tickCount = 0
-					thisCommander.log.Write(INFO, "Запущена команда!")
 					err := command(thisCommander.action)
+					thisCommander.log.Write(INFO, "Запущена команда")
 					if err != nil {
 						thisCommander.log.Write(ERROR, err.Error())
 					}
 				}
-				tickerToCommand.Reset(timeBetweenTick)
+
+				timer.Reset(timeBetweenTick)
 			}
 		case v := <-condition:
 			{
@@ -216,12 +224,12 @@ func (thisCommander *Commander) startCommand(condition chan bool, quit chan stru
 					lastCondition = v
 					tickCount = 0
 					if v {
-						thisCommander.log.Write(INFO, "Запущен таймер команды "+thisCommander.action+", до завершения: "+thisCommander.actionTimeout.String()+".")
-						tickerToCommand.Reset(timeBetweenTick)
-					} else {
-						thisCommander.log.Write(INFO, "Таймер команды остановлен по значению!")
-						tickerToCommand.Stop()
+						thisCommander.log.Write(INFO, "Запущен таймер команды "+thisCommander.action)
+						timer = time.NewTimer(1)
+						continue
 					}
+					thisCommander.log.Write(INFO, "Таймер команды остановлен по значению")
+					timer.Stop()
 				}
 			}
 		}

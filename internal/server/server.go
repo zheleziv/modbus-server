@@ -32,7 +32,6 @@ func New() *Server {
 }
 
 func (thisServer *Server) Setup(confHandler *configuration.ConfigHandler) {
-	fmt.Println("2")
 	config := confHandler.GetConfig()
 	rtn := make([]client.ClientInterface, 0)
 
@@ -51,37 +50,25 @@ func (thisServer *Server) Setup(confHandler *configuration.ConfigHandler) {
 		// если все имена неодинаковые, то проверяем полученные данные
 		// и добавляем в выходной массив новый узел
 		if (j - i - 1) == k {
-			var tmp client.ClientInterface
 			nodes := tmpTN.NODES
-			switch nodes[i].ConnectionType {
-			case client.MODBUS_TCP:
-				{
-					var err error
-
-					tmp, err = client.NewClinetModbus(nodes[i].IP, nodes[i].Port, nodes[i].ID, nodes[i].Name, nodes[i].Log, int(nodes[i].ConnectionAttempts), nodes[i].ConnectionTimeout)
-					if err != nil {
-						fmt.Println(myerr.New(err.Error()))
-						continue
-					}
-					for j := range nodes[i].TAGS {
-						err = tmp.SetTag(
-							nodes[i].TAGS[j].Name,
-							nodes[i].TAGS[j].Address,
-							nodes[i].TAGS[j].ScanPeriod,
-							nodes[i].TAGS[j].DataType)
-						if err != nil {
-							fmt.Println(myerr.New(err.Error()))
-							continue
-						}
-					}
-				}
-			default:
-				{
-					fmt.Println("неизвестный тип подключения")
+			client, err := client.New(nodes[i].ConnectionType, nodes[i].IP, nodes[i].Port, nodes[i].ID, nodes[i].Name, nodes[i].Log, nodes[i].ConnectionAttempts, nodes[i].ConnectionTimeout)
+			if err != nil {
+				fmt.Println(myerr.New(err.Error()))
+				continue
+			}
+			for j := range nodes[i].TAGS {
+				err = client.SetTag(
+					nodes[i].TAGS[j].Name,
+					nodes[i].TAGS[j].Address,
+					nodes[i].TAGS[j].ScanPeriod,
+					nodes[i].TAGS[j].DataType)
+				if err != nil {
+					fmt.Println(myerr.New(err.Error()))
 					continue
 				}
 			}
-			rtn = append(rtn, tmp)
+
+			rtn = append(rtn, client)
 		}
 	}
 
@@ -100,11 +87,7 @@ func (thisServer *Server) GetTagByName(name string) (tag.TagInterface, error) {
 
 	for i := range thisServer.data {
 		if thisServer.data[i].Name() == split[0] {
-			for j := range thisServer.data[i].Tags() {
-				if thisServer.data[i].Tags()[j].Name() == split[1] {
-					return thisServer.data[i].Tags()[j], nil
-				}
-			}
+			return thisServer.data[i].TagByName(split[1])
 		}
 	}
 	return nil, myerr.New("no such name")
