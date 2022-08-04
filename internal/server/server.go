@@ -51,7 +51,7 @@ func (thisServer *Server) Setup(confHandler *configuration.ConfigHandler) {
 		// и добавляем в выходной массив новый узел
 		if (j - i - 1) == k {
 			nodes := tmpTN.NODES
-			client, err := client.New(nodes[i].ConnectionType, nodes[i].IP, nodes[i].Port, nodes[i].ID, nodes[i].Name, nodes[i].Log, nodes[i].ConnectionAttempts, nodes[i].ConnectionTimeout)
+			client, err := client.New(nodes[i].ConnectionType, nodes[i].IP, nodes[i].Port, nodes[i].ID, nodes[i].Name, nodes[i].Debug, nodes[i].ConnectionAttempts, nodes[i].ConnectionTimeout)
 			if err != nil {
 				fmt.Println(myerr.New(err.Error()))
 				continue
@@ -115,20 +115,16 @@ func (thisServer *Server) Run() {
 		// сигнал смены конфига
 		select {
 		case <-changeCh:
-			{
-				close(quit)
-				wg.Wait()
-				quit = make(chan struct{})
+			close(quit)
+			wg.Wait()
+			quit = make(chan struct{})
 
-				for clientId := range thisServer.data {
-					wg.Add(1)
-					go thisServer.data[clientId].Start(quit, &wg)
-				}
+			for clientId := range thisServer.data {
+				wg.Add(1)
+				go thisServer.data[clientId].Start(quit, &wg)
 			}
 		case <-saveTicker.C:
-			{
-				thisServer.Save()
-			}
+			thisServer.Save()
 		}
 	}
 }

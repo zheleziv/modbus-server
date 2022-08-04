@@ -35,32 +35,26 @@ func NewChecker(s string, dataType string) (Checker, error) {
 	var err error
 	switch dataType {
 	case tag.COIL_TYPE:
-		{
-			var tmp CoilCondition
-			tmp, err = newCoilCondition(s)
-			if err != nil {
-				return rtn, myerr.New(err.Error())
-			}
-			rtn.condition = append(rtn.condition, &tmp)
+		var tmp CoilCondition
+		tmp, err = newCoilCondition(s)
+		if err != nil {
+			return rtn, myerr.New(err.Error())
 		}
+		rtn.condition = append(rtn.condition, &tmp)
 	case tag.WORD_TYPE:
-		{
-			var tmp []ConditionInterface
-			tmp, err = newWordCondition(s)
-			if err != nil {
-				return rtn, myerr.New(err.Error())
-			}
-			rtn.condition = tmp
+		var tmp []ConditionInterface
+		tmp, err = newWordCondition(s)
+		if err != nil {
+			return rtn, myerr.New(err.Error())
 		}
+		rtn.condition = tmp
 	case tag.DWORD_TYPE:
-		{
-			var tmp []ConditionInterface
-			tmp, err = newDWordCondition(s)
-			if err != nil {
-				return rtn, myerr.New(err.Error())
-			}
-			rtn.condition = tmp
+		var tmp []ConditionInterface
+		tmp, err = newDWordCondition(s)
+		if err != nil {
+			return rtn, myerr.New(err.Error())
 		}
+		rtn.condition = tmp
 	default:
 		return Checker{}, myerr.New("no such data type")
 	}

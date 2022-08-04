@@ -32,13 +32,13 @@ func (thisConfigHandler *ConfigHandler) parse() (ConfigurationData, error) {
 		if err := tmpСonf.(*ConfigurationDataWin).Setup(thisConfigHandler); err != nil {
 			return nil, myerr.New(err.Error())
 		}
-	} else {
-		tmpСonf = &ConfigurationDataApp{}
-		if err := tmpСonf.(*ConfigurationDataApp).Setup(thisConfigHandler); err != nil {
-			return nil, myerr.New(err.Error())
-		}
+		return tmpСonf, nil
 	}
 
+	tmpСonf = &ConfigurationDataApp{}
+	if err := tmpСonf.(*ConfigurationDataApp).Setup(thisConfigHandler); err != nil {
+		return nil, myerr.New(err.Error())
+	}
 	return tmpСonf, nil
 }
 

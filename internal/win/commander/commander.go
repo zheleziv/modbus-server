@@ -193,44 +193,38 @@ func (thisCommander *Commander) startCommand(condition chan bool, quit chan stru
 	for {
 		select {
 		case <-quit:
-			{
-				if lastCondition {
-					thisCommander.log.Write(INFO, "Таймер команды остановлен")
-				}
-				return
+			if lastCondition {
+				thisCommander.log.Write(INFO, "Таймер команды остановлен")
 			}
+			return
 		case <-timer.C:
-			{
-				timer.Stop()
+			timer.Stop()
 
-				if tickCount < 5 {
-					timeToCommand := thisCommander.actionTimeout - time.Duration(tickCount)*timeBetweenTick
-					thisCommander.log.Write(INFO, "Команда "+thisCommander.action+", до завершения таймера: "+timeToCommand.String())
-					tickCount++
-				} else {
-					tickCount = 0
-					err := command(thisCommander.action)
-					thisCommander.log.Write(INFO, "Запущена команда")
-					if err != nil {
-						thisCommander.log.Write(ERROR, err.Error())
-					}
+			if tickCount < 5 {
+				timeToCommand := thisCommander.actionTimeout - time.Duration(tickCount)*timeBetweenTick
+				thisCommander.log.Write(INFO, "Команда "+thisCommander.action+", до завершения таймера: "+timeToCommand.String())
+				tickCount++
+			} else {
+				tickCount = 0
+				err := command(thisCommander.action)
+				thisCommander.log.Write(INFO, "Запущена команда")
+				if err != nil {
+					thisCommander.log.Write(ERROR, err.Error())
 				}
-
-				timer.Reset(timeBetweenTick)
 			}
+
+			timer.Reset(timeBetweenTick)
 		case v := <-condition:
-			{
-				if lastCondition != v {
-					lastCondition = v
-					tickCount = 0
-					if v {
-						thisCommander.log.Write(INFO, "Запущен таймер команды "+thisCommander.action)
-						timer = time.NewTimer(1)
-						continue
-					}
-					thisCommander.log.Write(INFO, "Таймер команды остановлен по значению")
-					timer.Stop()
+			if lastCondition != v {
+				lastCondition = v
+				tickCount = 0
+				if v {
+					thisCommander.log.Write(INFO, "Запущен таймер команды "+thisCommander.action)
+					timer = time.NewTimer(1)
+					continue
 				}
+				thisCommander.log.Write(INFO, "Таймер команды остановлен по значению")
+				timer.Stop()
 			}
 		}
 	}
@@ -242,25 +236,19 @@ func command(c string) error {
 
 	switch exe[0] {
 	case SHUTDOWN:
-		{
-			flag = "/s"
-		}
+		flag = "/s"
 	case RESTART:
-		{
-			flag = "/r"
-		}
+		flag = "/r"
 	case RUN_PROGRAM:
-		{
-			if len(exe) != 2 {
-				return myerr.New("len(exe) != 2")
-			}
-			cmd := exec.Command("./" + exe[1])
-			err := cmd.Run()
-			if err != nil {
-				return myerr.New(err.Error())
-			}
-			return nil
+		if len(exe) != 2 {
+			return myerr.New("len(exe) != 2")
 		}
+		cmd := exec.Command("./" + exe[1])
+		err := cmd.Run()
+		if err != nil {
+			return myerr.New(err.Error())
+		}
+		return nil
 	default:
 		return myerr.New("invalid command")
 	}

@@ -17,7 +17,7 @@ type Node struct {
 	IP                 string
 	Port               int
 	ID                 uint8
-	Log                bool
+	Debug              bool
 	ConnectionTimeout  float64
 	ConnectionAttempts uint
 	TAGS               []Tag
