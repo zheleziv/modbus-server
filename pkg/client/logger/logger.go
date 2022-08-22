@@ -11,6 +11,7 @@ type Logger struct {
 	Lock           sync.Mutex
 	ParentNodeName string
 	ParentNodeIp   string
+	ParentNodeId   uint8
 	IsDebug        bool
 }
 
@@ -23,10 +24,11 @@ const (
 
 func (thisLogger *Logger) Debug(level string, nodestate string, msg string) {
 	if thisLogger.IsDebug {
-		fmt.Printf("%s >> Node: name - %s, IP - %s, state - %s. Message [%s][%s]: %s\n",
+		fmt.Printf("%s >> Node: name - %s, IP - %s, Id = %d, state - %s. Message [%s][%s]: %s\n",
 			time.Now().Format("2006-01-02 15:04:05"),
 			thisLogger.ParentNodeName,
 			thisLogger.ParentNodeIp,
+			thisLogger.ParentNodeId,
 			nodestate,
 			DEBUG,
 			level,
@@ -36,10 +38,11 @@ func (thisLogger *Logger) Debug(level string, nodestate string, msg string) {
 
 func (thisLogger *Logger) DebugWithTag(level string, nodestate string, tag string, msg string) {
 	if thisLogger.IsDebug {
-		fmt.Printf("%s >> Node: name - %s, IP - %s, state - %s. Tag: name - %s. Message [%s][%s]: %s\n",
+		fmt.Printf("%s >> Node: name - %s, IP - %s, Id = %d, state - %s. Tag: name - %s. Message [%s][%s]: %s\n",
 			time.Now().Format("2006-01-02 15:04:05"),
 			thisLogger.ParentNodeName,
 			thisLogger.ParentNodeIp,
+			thisLogger.ParentNodeId,
 			nodestate,
 			tag,
 			DEBUG,
@@ -49,10 +52,11 @@ func (thisLogger *Logger) DebugWithTag(level string, nodestate string, tag strin
 }
 
 func (thisLogger *Logger) WriteWithTag(level string, nodestate string, tag string, msg string) {
-	text := fmt.Sprintf("%s >> Node: name - %s, IP - %s, state - %s. Tag: name - %s. Message [%s]: %s\n",
+	text := fmt.Sprintf("%s >> Node: name - %s, IP - %s, Id = %d, state - %s. Tag: name - %s. Message [%s]: %s\n",
 		time.Now().Format("2006-01-02 15:04:05"),
 		thisLogger.ParentNodeName,
 		thisLogger.ParentNodeIp,
+		thisLogger.ParentNodeId,
 		nodestate,
 		tag,
 		level,
@@ -65,10 +69,11 @@ func (thisLogger *Logger) WriteWithTag(level string, nodestate string, tag strin
 }
 
 func (thisLogger *Logger) Write(level string, nodestate string, msg string) {
-	text := fmt.Sprintf("%s >> Node: name - %s, IP - %s, state - %s. Message [%s]: %s\n",
+	text := fmt.Sprintf("%s >> Node: name - %s, IP - %s, Id = %d, state - %s. Message [%s]: %s\n",
 		time.Now().Format("2006-01-02 15:04:05"),
 		thisLogger.ParentNodeName,
 		thisLogger.ParentNodeIp,
+		thisLogger.ParentNodeId,
 		nodestate,
 		level,
 		msg)

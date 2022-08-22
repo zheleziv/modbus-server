@@ -1,0 +1,160 @@
+{
+"NODES":[
+    {
+        "name" : "testNode1",
+        "ConnectionType": "modbusTCP",
+        "IP": "192.168.1.101",
+        "port":502,
+        "ID":1,
+        "Debug": true,
+        "ConnectionTimeout": 10,
+        "ConnectionAttempts": 5,
+        "TAGS": [
+            {
+                "name": "testTag1",
+                "address": 300001,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag2",
+                "address": 300002,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag3",
+                "address": 300004,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag4",
+                "address": 400001,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag5",
+                "address": 400002,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag6",
+                "address": 400003,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag7",
+                "address": 400004,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag8",
+                "address": 400005,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag9",
+                "address": 400006,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag10",
+                "address": 400007,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag11",
+                "address": 400008,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag12",
+                "address": 400009,
+                "dataType": "word",
+                "scanPeriod":1
+            }
+        ]
+    },
+    {
+        "name" : "testNode2",
+        "ConnectionType": "modbusTCP",
+        "IP": "127.0.0.1",
+        "port":503,
+        "ID":1,
+        "Debug": true,
+        "ConnectionTimeout": 10,
+        "ConnectionAttempts": 5,
+        "TAGS": [
+            {
+                "name": "testTag1",
+                "address": 400001,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag2",
+                "address": 400002,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag3",
+                "address": 400003,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag4",
+                "address": 400004,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag5",
+                "address": 400005,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag6",
+                "address": 400006,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag7",
+                "address": 400007,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag8",
+                "address": 400008,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag9",
+                "address": 400009,
+                "dataType": "word",
+                "scanPeriod":1
+            },
+            {
+                "name": "testTag10",
+                "address": 400010,
+                "dataType": "word",
+                "scanPeriod":1
+            }
+        ]
+    }
+]
+}

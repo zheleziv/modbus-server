@@ -131,6 +131,7 @@ func (thisModbusClient *сlientModbus) TagById(id int) (tag.TagInterface, error)
 	}
 	return thisModbusClient.tags[id], nil
 }
+
 func (thisModbusClient *сlientModbus) TagByName(name string) (tag.TagInterface, error) {
 	for id := range thisModbusClient.tags {
 		if thisModbusClient.tags[id].Name() == name {
@@ -139,9 +140,10 @@ func (thisModbusClient *сlientModbus) TagByName(name string) (tag.TagInterface,
 	}
 	return nil, myerr.New("invalid client tag name")
 }
+
 func (thisModbusClient *сlientModbus) SetTag(name string, address uint32, scanPeriod float64, dataType string) error {
 	if _, err := thisModbusClient.TagByName(name); err != nil {
-		adr16, err := checkModbusAddress(address, dataType)
+		adr16, function_number, err := checkModbusAddress(address, dataType)
 		if err != nil {
 			return myerr.New(err.Error())
 		}
@@ -152,9 +154,18 @@ func (thisModbusClient *сlientModbus) SetTag(name string, address uint32, scanP
 
 		switch v := t.(type) {
 		case *tag.CoilTag:
+			var function func(byte, uint16, uint16) ([]byte, error)
+			if function_number == FUNCTION_1 {
+				function = thisModbusClient.ReadCoils
+			} else if function_number == FUNCTION_2 {
+				function = thisModbusClient.ReadDiscreteInputs
+			} else {
+				return myerr.New("invalid function number")
+			}
+
 			v.ReadFunc = func() (byte, error) {
 				thisModbusClient.mutex.Lock()
-				resp, err := thisModbusClient.ReadDiscreteInputs(thisModbusClient.slaveId, v.Address(), 1)
+				resp, err := function(thisModbusClient.slaveId, v.Address(), 1)
 				thisModbusClient.mutex.Unlock()
 				if err != nil {
 					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ с ошибкой")
@@ -169,9 +180,17 @@ func (thisModbusClient *сlientModbus) SetTag(name string, address uint32, scanP
 				return resp[0], nil
 			}
 		case *tag.WordTag:
+			var function func(byte, uint16, uint16) ([]uint16, error)
+			if function_number == FUNCTION_3 {
+				function = thisModbusClient.ReadHoldingRegisters
+			} else if function_number == FUNCTION_4 {
+				function = thisModbusClient.ReadInputRegisters
+			} else {
+				return myerr.New("invalid function number")
+			}
 			v.ReadFunc = func() (uint16, error) {
 				thisModbusClient.mutex.Lock()
-				resp, err := thisModbusClient.ReadHoldingRegisters(thisModbusClient.slaveId, v.Address(), 1)
+				resp, err := function(thisModbusClient.slaveId, v.Address(), 1)
 				thisModbusClient.mutex.Unlock()
 				if err != nil {
 					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ с ошибкой")
@@ -186,9 +205,17 @@ func (thisModbusClient *сlientModbus) SetTag(name string, address uint32, scanP
 				return resp[0], nil
 			}
 		case *tag.DWordTag:
+			var function func(byte, uint16, uint16) ([]uint16, error)
+			if function_number == FUNCTION_3 {
+				function = thisModbusClient.ReadHoldingRegisters
+			} else if function_number == FUNCTION_4 {
+				function = thisModbusClient.ReadInputRegisters
+			} else {
+				return myerr.New("invalid function number")
+			}
 			v.ReadFunc = func() (uint32, error) {
 				thisModbusClient.mutex.Lock()
-				resp, err := thisModbusClient.ReadHoldingRegisters(thisModbusClient.slaveId, v.Address(), 2)
+				resp, err := function(thisModbusClient.slaveId, v.Address(), 2)
 				thisModbusClient.mutex.Unlock()
 				if err != nil {
 					thisModbusClient.log.DebugWithTag(logger.INFO, thisModbusClient.state, v.Name(), "Получен ответ с ошибкой")
@@ -210,31 +237,32 @@ func (thisModbusClient *сlientModbus) SetTag(name string, address uint32, scanP
 	return myerr.New("client tag name already exists")
 }
 
-func checkModbusAddress(address uint32, dataType string) (uint16, error) {
-	if address >= tag.UINT16_MAX_VALUE {
-		t := FUNCTION__TAG_TYPE[dataType]
-		if t == nil {
-			return 0, myerr.New("invalid tag data type")
-		}
-
-		tmpINT := int(address / 100000.0)
-		isDefined := false
-		for i := range t {
-			if t[i] == tmpINT {
-				isDefined = isDefined || true
-			}
-		}
-		if !isDefined {
-			return 0, myerr.New("invalid tag address")
-		}
-
-		tmpUINT16 := uint16(address - uint32(tmpINT*100000))
-		if tmpUINT16 >= tag.UINT16_MAX_VALUE {
-			return 0, myerr.New("invalid tag address")
-		}
-		return tmpUINT16 - 1, nil
+func checkModbusAddress(address uint32, dataType string) (uint16, int, error) {
+	// if address >= tag.UINT16_MAX_VALUE {
+	t := FUNCTION__TAG_TYPE[dataType]
+	if t == nil {
+		return 0, 0, myerr.New("invalid tag data type")
 	}
-	return uint16(address - 1), nil
+
+	tmpINT := int(address / 100000.0)
+	fmt.Println(tmpINT)
+	isDefined := false
+	for i := range t {
+		if t[i] == tmpINT {
+			isDefined = isDefined || true
+		}
+	}
+	if !isDefined {
+		return 0, 0, myerr.New("invalid tag address")
+	}
+
+	tmpUINT16 := uint16(address - uint32(tmpINT*100000))
+	if tmpUINT16 >= tag.UINT16_MAX_VALUE {
+		return 0, 0, myerr.New("invalid tag address")
+	}
+	return tmpUINT16 - 1, tmpINT, nil
+	// }
+	// return uint16(address - 1), nil
 }
 
 // ====================ConnectionTimeout
@@ -298,6 +326,7 @@ func NewClinetModbus(ip string, port int, slaveID uint8, name string, debug bool
 	c.log = logger.Logger{
 		ParentNodeName: c.name,
 		ParentNodeIp:   c.ip,
+		ParentNodeId:   c.slaveId,
 		IsDebug:        debug,
 	}
 

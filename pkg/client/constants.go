@@ -15,12 +15,12 @@ const (
 
 // функции modbus
 const (
-	FUNCTION_1 = 0x1
-	FUNCTION_2 = 0x2
-	FUNCTION_3 = 0x3
-	FUNCTION_4 = 0x4
-	FUNCTION_5 = 0x5
-	FUNCTION_6 = 0x6
+	FUNCTION_1 = 0x0 // Read coil
+	FUNCTION_2 = 0x1 // Read discrete inputs
+	FUNCTION_3 = 0x4 // Read holding registers
+	FUNCTION_4 = 0x3 // Read inputs registers
+	//FUNCTION_5 = 0x5
+	//FUNCTION_6 = 0x6
 )
 
 var FUNCTION__TAG_TYPE = map[string][]int{

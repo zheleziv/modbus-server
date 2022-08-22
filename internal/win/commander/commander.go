@@ -243,7 +243,7 @@ func command(c string) error {
 		if len(exe) != 2 {
 			return myerr.New("len(exe) != 2")
 		}
-		cmd := exec.Command("./" + exe[1])
+		cmd := exec.Command(exe[1])
 		err := cmd.Run()
 		if err != nil {
 			return myerr.New(err.Error())
